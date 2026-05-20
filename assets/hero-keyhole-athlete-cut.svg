@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 304 166" fill="none">
+  <defs>
+    <filter id="silhouette-white" color-interpolation-filters="sRGB">
+      <feColorMatrix
+        in="SourceGraphic"
+        type="matrix"
+        values="0 0 0 0 1
+                0 0 0 0 1
+                0 0 0 0 1
+                -1 0 0 0 1"
+      />
+    </filter>
+  </defs>
+  <image
+    href="hero-keyhole-athlete.png"
+    width="304"
+    height="166"
+    filter="url(#silhouette-white)"
+  />
+</svg>

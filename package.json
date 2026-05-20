@@ -1,0 +1,12 @@
+{
+  "name": "benini-squad",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Site estático Benini Squad",
+  "scripts": {
+    "dev": "live-server --port=3000 --open=index.html --ignore=.cursor/** --ignorePattern=\\.cursor"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}

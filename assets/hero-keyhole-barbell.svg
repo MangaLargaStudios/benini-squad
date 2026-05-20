@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 150" fill="none">
+  <!-- Branco = máscara opaca (dourado); preto = recorte (vídeo visível) -->
+  <rect width="420" height="150" fill="white"/>
+  <g fill="black">
+    <!-- Anilha esquerda -->
+    <circle cx="62" cy="75" r="56"/>
+    <circle cx="62" cy="75" r="22" fill="white"/>
+  </g>
+  <g fill="black">
+    <!-- Anilha direita -->
+    <circle cx="358" cy="75" r="56"/>
+    <circle cx="358" cy="75" r="22" fill="white"/>
+  </g>
+  <!-- Barra de supino -->
+  <rect x="62" y="66" width="296" height="18" rx="9" fill="black"/>
+  <!-- Sleeves / colares -->
+  <rect x="108" y="69" width="28" height="12" rx="4" fill="black"/>
+  <rect x="284" y="69" width="28" height="12" rx="4" fill="black"/>
+</svg>
