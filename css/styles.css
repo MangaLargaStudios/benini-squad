@@ -2578,18 +2578,174 @@ body.is-hero-manifesto-overlap #manifesto {
 }
 
 .section-woman-models {
-  min-height: clamp(580px, calc(78vh + 48px), 920px);
-  height: clamp(580px, calc(78vh + 48px), 920px);
+  --woman-models-bottom-space: 90px;
+  min-height: clamp(
+    calc(580px + var(--woman-models-bottom-space)),
+    calc(78vh + 48px + var(--woman-models-bottom-space)),
+    calc(920px + var(--woman-models-bottom-space))
+  );
+  height: clamp(
+    calc(580px + var(--woman-models-bottom-space)),
+    calc(78vh + 48px + var(--woman-models-bottom-space)),
+    calc(920px + var(--woman-models-bottom-space))
+  );
+  overflow: visible;
   cursor: default;
+}
+
+.woman-models-slots {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: clamp(10px, 1.2vw, 14px);
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: clamp(20px, 4.5vh, 44px) clamp(10px, 2vw, 20px);
+  pointer-events: none;
+}
+
+.woman-models-slot {
+  position: relative;
+  min-height: 0;
+}
+
+.woman-models-card {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  min-height: 0;
+  border-radius: clamp(12px, 1.2vw, 18px);
+  border: 1px solid color-mix(in srgb, var(--col-gold-dim) 32%, rgba(255, 255, 255, 0.28));
+  background: transparent;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--col-gold-light) 45%, transparent),
+    0 8px 28px color-mix(in srgb, var(--col-gold-dim) 12%, transparent);
+}
+
+.woman-models-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--col-gold-dim) 22%, transparent) 0%,
+    color-mix(in srgb, var(--col-gold-dim) 14%, transparent) 36%,
+    color-mix(in srgb, var(--col-gold) 10%, transparent) 62%,
+    color-mix(in srgb, var(--col-gold-light) 8%, transparent) 86%,
+    color-mix(in srgb, var(--col-gold-light) 4%, var(--col-cream)) 100%
+  );
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .woman-models-card::before {
+    background: linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--col-gold-dim) 58%, var(--col-cream)) 0%,
+      color-mix(in srgb, var(--col-gold-light) 42%, var(--col-cream)) 100%
+    );
+  }
+}
+
+@media (max-width: 768px) {
+  .section-woman-models {
+    min-height: clamp(
+      calc(900px + var(--woman-models-bottom-space, 90px)),
+      118vh,
+      calc(1120px + var(--woman-models-bottom-space, 90px))
+    );
+    height: clamp(
+      calc(900px + var(--woman-models-bottom-space, 90px)),
+      118vh,
+      calc(1120px + var(--woman-models-bottom-space, 90px))
+    );
+  }
+
+  .woman-models-columns {
+    gap: 8px 6px;
+    padding: 12px 8px 12px;
+    box-sizing: border-box;
+  }
+
+  .woman-models-click-hint {
+    top: clamp(12px, 6%, 36px);
+    right: clamp(6px, 5%, 14px);
+    padding: 6px 12px;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+  }
+
+  .section-manifesto {
+    padding: clamp(72px, 16vw, 96px) 20px clamp(80px, 18vw, 104px);
+    overflow: visible;
+  }
+
+  .section-manifesto.section-manifesto--overlap-ready {
+    padding-top: clamp(96px, 22vw, 128px);
+  }
+
+  .manifesto-bg-text {
+    font-size: clamp(64px, 22vw, 120px);
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .manifesto-content {
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .manifesto-eyebrow {
+    margin-bottom: 32px;
+    letter-spacing: 0.22em;
+  }
+
+  .manifesto-headline {
+    font-size: clamp(26px, 7.6vw, 40px);
+    line-height: 1.12;
+  }
+
+  .manifesto-headline .word-wrap {
+    margin: 0 2px 6px;
+  }
+
+  .manifesto-sub {
+    margin-top: 28px;
+    max-width: 100%;
+    font-size: clamp(15px, 4.1vw, 18px);
+    line-height: 1.65;
+  }
+
+  .manifesto-cta {
+    margin-top: 36px;
+    padding: 0 4px;
+  }
+
+  .manifesto-cta .btn-primary {
+    width: 100%;
+    max-width: 320px;
+  }
 }
 
 .woman-models-stage {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 3;
   width: 100%;
   height: 100%;
   pointer-events: none;
+}
+
+.section-woman-models--focused .woman-models-stage {
+  z-index: 6;
 }
 
 .woman-models-ui {
@@ -2599,12 +2755,20 @@ body.is-hero-manifesto-overlap #manifesto {
   pointer-events: none;
 }
 
+.section-woman-models--focused .woman-models-ui {
+  z-index: 7;
+}
+
 .woman-models-columns {
   position: absolute;
   inset: 0;
   z-index: 3;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: clamp(10px, 1.2vw, 14px);
+  box-sizing: border-box;
+  padding: clamp(20px, 4.5vh, 44px) clamp(10px, 2vw, 20px);
   pointer-events: none;
 }
 
@@ -2663,55 +2827,20 @@ body.is-hero-manifesto-overlap #manifesto {
   visibility: hidden !important;
 }
 
-.section-woman-models--focused .woman-models-columns {
-  pointer-events: none;
-}
-
-.section-woman-models--focused .woman-models-column[data-active='true'] {
-  pointer-events: auto;
-}
-
-.section-woman-models--focused {
-  --focus-cut-left: 0%;
-  --focus-cut-right: 25%;
-  --focus-feather: 3%;
-}
-
 .woman-models-focus-overlay {
   position: absolute;
   inset: 0;
   z-index: 2;
   opacity: 0;
-  background: transparent;
-  backdrop-filter: blur(20px) saturate(118%);
-  -webkit-backdrop-filter: blur(20px) saturate(118%);
-  transition: opacity 0.55s var(--ease-brand);
+  background: color-mix(in srgb, var(--col-cream) 40%, transparent);
+  backdrop-filter: blur(22px) saturate(130%);
+  -webkit-backdrop-filter: blur(22px) saturate(130%);
+  transition: opacity 0.5s var(--ease-brand);
   pointer-events: none;
 }
 
 .section-woman-models--focused .woman-models-focus-overlay {
-  z-index: 4;
   opacity: 1;
-  pointer-events: auto;
-  cursor: pointer;
-  -webkit-mask-image: linear-gradient(
-    to right,
-    #fff 0%,
-    #fff calc(var(--focus-cut-left) - var(--focus-feather)),
-    transparent calc(var(--focus-cut-left) + var(--focus-feather)),
-    transparent calc(var(--focus-cut-right) - var(--focus-feather)),
-    #fff calc(var(--focus-cut-right) + var(--focus-feather)),
-    #fff 100%
-  );
-  mask-image: linear-gradient(
-    to right,
-    #fff 0%,
-    #fff calc(var(--focus-cut-left) - var(--focus-feather)),
-    transparent calc(var(--focus-cut-left) + var(--focus-feather)),
-    transparent calc(var(--focus-cut-right) - var(--focus-feather)),
-    #fff calc(var(--focus-cut-right) + var(--focus-feather)),
-    #fff 100%
-  );
 }
 
 .woman-models-focus-panel {
@@ -2797,7 +2926,7 @@ body.is-hero-manifesto-overlap #manifesto {
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .section-woman-models--focused .woman-models-focus-overlay {
-    background: color-mix(in srgb, var(--col-cream-mid) 55%, transparent);
+    background: color-mix(in srgb, var(--col-cream-mid) 78%, transparent);
   }
 }
 
@@ -2881,6 +3010,19 @@ body.is-hero-manifesto-overlap #manifesto {
 
   .cta-input {
     width: auto;
+  }
+
+  .woman-models-slots {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: none;
+    padding: clamp(28px, 5.5vh, 52px) clamp(14px, 2vw, 28px);
+  }
+
+  .woman-models-columns {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: none;
+    gap: clamp(10px, 1.35vw, 16px);
+    padding: clamp(28px, 5.5vh, 52px) clamp(14px, 2vw, 28px);
   }
 }
 
