@@ -990,10 +990,10 @@ html.nav-menu-open {
   );
   -webkit-mask-image:
     linear-gradient(#fff, #fff),
-    url('../assets/hero-keyhole-silhouette.png');
+    url('../assets/hero-keyhole-silhouette-cut.svg');
   mask-image:
     linear-gradient(#fff, #fff),
-    url('../assets/hero-keyhole-silhouette.png');
+    url('../assets/hero-keyhole-silhouette-cut.svg');
   -webkit-mask-mode: luminance, luminance;
   mask-mode: luminance, luminance;
   -webkit-mask-size:
@@ -1004,12 +1004,12 @@ html.nav-menu-open {
     auto var(--keyhole-mask-size);
   -webkit-mask-position:
     center,
-    center 48%;
+    center 50%;
   mask-position:
     center,
-    center 48%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
+    center 50%;
+  -webkit-mask-repeat: no-repeat, no-repeat;
+  mask-repeat: no-repeat, no-repeat;
   -webkit-mask-composite: source-out;
   mask-composite: exclude;
   will-change: mask-size, opacity;
