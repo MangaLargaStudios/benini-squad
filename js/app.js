@@ -33,7 +33,15 @@ function initLenis() {
     touchMultiplier: 1.15,
   });
 
-  lenis.on('scroll', ScrollTrigger.update);
+  lenis.on('scroll', () => {
+    window.__beniniIsScrolling = true;
+    clearTimeout(window.__beniniScrollIdleTimer);
+    window.__beniniScrollIdleTimer = setTimeout(() => {
+      window.__beniniIsScrolling = false;
+    }, 220);
+
+    ScrollTrigger.update();
+  });
 
   gsap.ticker.add((time) => {
     lenis.raf(time * 1000);
@@ -415,8 +423,9 @@ function initNavEntrance(nav) {
   const navBarGlass = nav.querySelector('.nav-bar-glass');
   const navBarPop = nav.querySelector('.nav-bar-pop');
   const menuToggle = nav.querySelector('.nav-menu-toggle');
+  const navAction = nav.querySelector('.nav-action');
   const navActionLabel = nav.querySelector('.nav-action-label');
-  const navActionRingPath = nav.querySelector('.nav-action-ring-path');
+  const navActionIcon = nav.querySelector('.nav-action .btn-primary__icon');
   if (!navBarPop) return;
 
   const barChars = collectNavBarTextElements(nav).flatMap((el) => splitNavText(el));
@@ -427,10 +436,9 @@ function initNavEntrance(nav) {
   });
 
   if (prefersReducedMotion()) {
-    gsap.set([navBarGlass, navBarPop, menuToggle, barChars, actionChars].filter(Boolean), {
+    gsap.set([navBarGlass, navBarPop, menuToggle, navAction, navActionIcon, barChars, actionChars].filter(Boolean), {
       clearProps: 'all',
     });
-    if (navActionRingPath) gsap.set(navActionRingPath, { clearProps: 'all' });
     nav.querySelectorAll('.nav-mobile-bubble').forEach((bubble) => {
       if (bubble._navChars) gsap.set(bubble._navChars, { clearProps: 'all' });
     });
@@ -451,12 +459,16 @@ function initNavEntrance(nav) {
   if (barChars.length) gsap.set(barChars, { yPercent: 110, opacity: 0 });
   if (actionChars.length) gsap.set(actionChars, { yPercent: 110, opacity: 0 });
 
-  if (navActionRingPath) {
-    gsap.set(navActionRingPath, {
-      strokeDasharray: 1,
-      strokeDashoffset: 1,
+  if (navAction) {
+    navAction.classList.add('is-entering');
+    gsap.set(navAction, {
+      scale: 0.82,
+      opacity: 0,
+      transformOrigin: 'center center',
     });
   }
+
+  if (navActionIcon) gsap.set(navActionIcon, { opacity: 0 });
 
   const mobileMenu = nav.querySelector('.nav-mobile-menu');
   if (mobileMenu) resetMobileNavBubbles(mobileMenu);
@@ -468,8 +480,9 @@ function initNavEntrance(nav) {
         navBarGlass.classList.remove('is-entering');
         gsap.set(navBarGlass, { clearProps: 'transform' });
       }
-      if (navActionRingPath) {
-        gsap.set(navActionRingPath, { clearProps: 'strokeDasharray,strokeDashoffset' });
+      if (navAction) {
+        navAction.classList.remove('is-entering');
+        gsap.set(navAction, { clearProps: 'transform,opacity' });
       }
     },
   });
@@ -495,20 +508,33 @@ function initNavEntrance(nav) {
     tl.to(barChars, splitTextShowOnScroll(), textRevealAt);
   }
 
-  /* 3 — Começar: letras + contorno desenhando no mesmo timing */
+  /* 3 — Começar: popup do shape + letras no mesmo timing */
+  if (navAction) {
+    tl.to(
+      navAction,
+      {
+        scale: 1,
+        opacity: 1,
+        duration: 0.72,
+        ease: 'back.out(1.7)',
+      },
+      textRevealAt
+    );
+  }
+
   if (actionChars.length) {
     tl.to(actionChars, splitTextShowOnScroll(), textRevealAt);
   }
 
-  if (navActionRingPath && actionChars.length) {
+  if (navActionIcon && actionChars.length) {
     tl.to(
-      navActionRingPath,
+      navActionIcon,
       {
-        strokeDashoffset: 0,
-        duration: getSplitTextRevealDuration(actionChars.length),
-        ease: SPLIT_TEXT_SHOW.ease,
+        opacity: 1,
+        duration: getSplitTextRevealDuration(actionChars.length) * 0.85,
+        ease: 'power2.out',
       },
-      textRevealAt
+      textRevealAt + 0.06
     );
   }
 
@@ -1234,9 +1260,4 @@ document.addEventListener('DOMContentLoaded', () => {
   initScrollRevealEngine();
 
   ScrollTrigger.refresh();
-
-  requestAnimationFrame(() => {
-    ScrollTrigger.refresh();
-    requestAnimationFrame(() => ScrollTrigger.refresh());
-  });
 });

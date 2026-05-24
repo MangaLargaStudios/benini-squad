@@ -80,13 +80,9 @@
         <button type="button" class="nav-lang-btn">EN</button>
       </div>
 
-      <a href="#cta" class="nav-action" aria-label="Começar">
-        <span class="nav-action-ring" aria-hidden="true">
-          <svg class="nav-action-ring-svg" viewBox="0 0 100 32" preserveAspectRatio="none">
-            <rect class="nav-action-ring-path" x="0.5" y="0.5" width="99" height="31" rx="7" ry="7" pathLength="1" />
-          </svg>
-        </span>
-        <span class="nav-action-label">Começar</span>
+      <a href="#cta" class="nav-action btn-primary btn-glass btn-glass--nav" aria-label="Começar">
+        <span class="btn-primary__label nav-action-label">Começar</span>
+        <span class="btn-primary__icon" aria-hidden="true">→</span>
       </a>
     </div>
         </div>
@@ -210,25 +206,29 @@
       ></div>
       <div class="hero-visual-blueprint-grid" aria-hidden="true"></div>
       <div class="hero-visual-benini" id="hero-visual-benini" aria-hidden="true">
-        <img
-          id="hero-visual-benini-img"
-          class="hero-visual-benini-img"
-          src="images/Benini-Alpha.webp"
-          alt=""
-          width="1200"
-          height="1600"
-          decoding="async"
-        />
+        <div class="hero-visual-benini-figure">
+          <img
+            id="hero-visual-benini-img"
+            class="hero-visual-benini-img"
+            src="images/Benini-Alpha.webp"
+            alt=""
+            width="1200"
+            height="1600"
+            decoding="async"
+          />
+          <div
+            class="hero-visual-benini-nameplate"
+            id="hero-visual-benini-nameplate"
+            aria-hidden="true"
+          >
+            <span class="hero-visual-benini-nameplate__glass" aria-hidden="true"></span>
+            <span class="hero-visual-benini-nameplate__label">Lucas Benini</span>
+          </div>
+        </div>
       </div>
       <div class="hero-visual-dumbbell" id="hero-visual-dumbbell" aria-hidden="true">
         <div id="hero-visual-gltf-slot" class="hero-visual-gltf-slot"></div>
       </div>
-      <div
-        class="hero-visual-results-shape"
-        id="hero-visual-results-shape"
-        aria-hidden="true"
-      ></div>
-
       <div
         class="hero-visual-blur-panel hero-visual-blur-layer hero-visual-blur-layer--right"
         id="hero-visual-blur-panel"

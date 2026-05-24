@@ -4,6 +4,15 @@ const DUMBBELL_MODEL_URL = 'models/3d/domyos_dumbbell.glb';
 const DUMBBELL_FIT_SIZE = 2.975;
 const DUMBBELL_SCALE_START_MULT = 0.918;
 const DUMBBELL_SCALE_END_MULT = 1.122;
+const DUMBBELL_BASE_ROTATION = { x: 0.15, y: Math.PI * 0.28, z: 0.05 };
+const DUMBBELL_SCROLL_ROTATION_START = { x: DUMBBELL_BASE_ROTATION.x, y: DUMBBELL_BASE_ROTATION.y, z: 0 };
+const DUMBBELL_SCROLL_ROTATION_END = {
+  x: DUMBBELL_BASE_ROTATION.x,
+  y: DUMBBELL_BASE_ROTATION.y + Math.PI * 0.1,
+  z: Math.PI * 5,
+};
+const DUMBBELL_SCROLL_POSITION_START = { x: 5, y: 0.35, z: 0 };
+const DUMBBELL_SCROLL_POSITION_END = { x: 0.95, y: 0.3, z: 0 };
 
 function configureGltfMaterial(material) {
   if (!material) return;
@@ -38,7 +47,7 @@ function fitModelToScene(model, targetSize = DUMBBELL_FIT_SIZE) {
 
   model.position.sub(center);
   model.scale.setScalar(scale);
-  model.rotation.set(0.15, Math.PI * 0.28, 0.05);
+  model.rotation.set(DUMBBELL_BASE_ROTATION.x, DUMBBELL_BASE_ROTATION.y, DUMBBELL_BASE_ROTATION.z);
 
   return scale;
 }
@@ -60,7 +69,6 @@ function addDumbbellLights(scene) {
 }
 
 const HERO_HOLD_PHASE_SPLIT = { dumbbell: 0.44, blur: 0.26, text: 0.3 };
-const HERO_RESULTS_SHAPE_BLUR_DELAY_RATIO = 0.14;
 const HERO_BLUEPRINT_DEFAULTS = {
   strength: 1,
   lineA: 0.2,
@@ -90,9 +98,9 @@ const HERO_PHASE_SCROLL_IDS = [
   'hero-phase-dumbbell-pos',
   'hero-phase-dumbbell-rot',
   'hero-phase-dumbbell-scale',
+  'hero-phase-dumbbell-front',
   'hero-phase-blueprint',
   'hero-phase-blur',
-  'hero-phase-results-shape',
   'hero-phase-text',
   'hero-manifesto-overlap',
   'manifesto-overlap-text',
@@ -131,19 +139,24 @@ function killHeroPhaseScrolls() {
     gsap.set(aside.querySelectorAll('.aside-line'), HERO_ASIDE_LINE_HIDDEN);
   }
 
+  const beniniNameplate = document.getElementById('hero-visual-benini-nameplate');
+  if (beniniNameplate) {
+    gsap.set(beniniNameplate, { opacity: 0, visibility: 'hidden' });
+  }
+
   const blurLayers = getHeroBlurLayers();
   if (blurLayers.length) {
     gsap.set(blurLayers, { opacity: 0 });
   }
 
-  const resultsShape = document.getElementById('hero-visual-results-shape');
-  if (resultsShape) {
-    gsap.set(resultsShape, { x: '100%', force3D: true });
-  }
-
   const blueprintGrid = document.querySelector('.hero-visual-blueprint-grid');
   if (blueprintGrid) {
     gsap.set(blueprintGrid, mapBlueprintVars(HERO_BLUEPRINT_DEFAULTS));
+  }
+
+  const dumbbellWrap = document.getElementById('hero-visual-dumbbell');
+  if (dumbbellWrap) {
+    dumbbellWrap.classList.remove('is-front');
   }
 
   resetHeroManifestoOverlapLayout();
@@ -226,15 +239,6 @@ function phaseScrollRange(phase) {
   };
 }
 
-function getResultsShapePhase(blurPhase) {
-  const delayPx = Math.round(blurPhase.lengthPx * HERO_RESULTS_SHAPE_BLUR_DELAY_RATIO);
-
-  return {
-    startPx: blurPhase.startPx + delayPx,
-    lengthPx: Math.max(1, blurPhase.lengthPx - delayPx),
-  };
-}
-
 function prepareDumbbellForScroll() {
   const dumbbell = window._dumbbell;
   if (!dumbbell) return null;
@@ -243,9 +247,17 @@ function prepareDumbbellForScroll() {
   const scaleStart = baseScale * DUMBBELL_SCALE_START_MULT;
   const scaleEnd = baseScale * DUMBBELL_SCALE_END_MULT;
 
-  dumbbell.position.set(5, 0.35, 0);
+  dumbbell.position.set(
+    DUMBBELL_SCROLL_POSITION_START.x,
+    DUMBBELL_SCROLL_POSITION_START.y,
+    DUMBBELL_SCROLL_POSITION_START.z
+  );
   dumbbell.scale.setScalar(scaleStart);
-  dumbbell.rotation.z = 0;
+  dumbbell.rotation.set(
+    DUMBBELL_SCROLL_ROTATION_START.x,
+    DUMBBELL_SCROLL_ROTATION_START.y,
+    DUMBBELL_SCROLL_ROTATION_START.z
+  );
   dumbbell.visible = true;
   dumbbell.traverse((child) => {
     if (!child.isMesh || !child.material) return;
@@ -265,7 +277,7 @@ function initHeroVideoPhaseScroll() {
   const metrics = window.__heroVideoScrollMetrics;
   const wrap = document.getElementById('hero-visual-scroll-wrap');
   if (!metrics || !wrap) {
-    requestAnimationFrame(initHeroVideoPhaseScroll);
+    scheduleHeroPhaseScrollInit();
     return;
   }
 
@@ -301,10 +313,28 @@ function initHeroVideoPhaseScroll() {
   if (!reducedMotion && dumbbellState) {
     const { dumbbell, scaleStart, scaleEnd } = dumbbellState;
     const range = phaseScrollRange(phases.dumbbell);
+    const dumbbellWrap = document.getElementById('hero-visual-dumbbell');
+
+    if (dumbbellWrap) {
+      gsap.set(dumbbellWrap, { opacity: 1 });
+      ScrollTrigger.create(
+        dumbbellScrollTriggerConfig({
+          id: 'hero-phase-dumbbell-front',
+          trigger,
+          start: range.start,
+          end: phaseScrollRange(phases.blur).end,
+          onEnter: () => dumbbellWrap.classList.add('is-front'),
+          onLeave: () => dumbbellWrap.classList.remove('is-front'),
+          onEnterBack: () => dumbbellWrap.classList.add('is-front'),
+          onLeaveBack: () => dumbbellWrap.classList.remove('is-front'),
+        })
+      );
+    }
 
     gsap.to(dumbbell.position, {
-      x: 0,
-      y: 0.35,
+      x: DUMBBELL_SCROLL_POSITION_END.x,
+      y: DUMBBELL_SCROLL_POSITION_END.y,
+      z: DUMBBELL_SCROLL_POSITION_END.z,
       ease: 'none',
       scrollTrigger: dumbbellScrollTriggerConfig({
         id: 'hero-phase-dumbbell-pos',
@@ -315,7 +345,9 @@ function initHeroVideoPhaseScroll() {
     });
 
     gsap.to(dumbbell.rotation, {
-      z: Math.PI * 4,
+      x: DUMBBELL_SCROLL_ROTATION_END.x,
+      y: DUMBBELL_SCROLL_ROTATION_END.y,
+      z: DUMBBELL_SCROLL_ROTATION_END.z,
       ease: 'none',
       scrollTrigger: dumbbellScrollTriggerConfig({
         id: 'hero-phase-dumbbell-rot',
@@ -383,42 +415,25 @@ function initHeroVideoPhaseScroll() {
     }
   }
 
-  const resultsShape = document.getElementById('hero-visual-results-shape');
-  if (resultsShape) {
-    gsap.set(resultsShape, { x: '100%', force3D: true });
-    if (!reducedMotion) {
-      gsap.fromTo(
-        resultsShape,
-        { x: '100%' },
-        {
-          x: '0%',
-          ease: 'none',
-          force3D: true,
-          scrollTrigger: dumbbellScrollTriggerConfig({
-            id: 'hero-phase-results-shape',
-            trigger,
-            ...phaseScrollRange(getResultsShapePhase(phases.blur)),
-            scrub,
-          }),
-        }
-      );
-    } else {
-      gsap.set(resultsShape, { x: '0%' });
-    }
-  }
-
   const aside = document.getElementById('benini-text-aside');
   const lines = aside?.querySelectorAll('.aside-line');
+  const beniniNameplate = document.getElementById('hero-visual-benini-nameplate');
 
   if (aside && lines?.length) {
     if (reducedMotion) {
       gsap.set(aside, { opacity: 1, visibility: 'visible' });
       gsap.set(lines, { opacity: 1, yPercent: 0 });
+      if (beniniNameplate) {
+        gsap.set(beniniNameplate, { opacity: 1, visibility: 'visible' });
+      }
       aside.dataset.asideScrollReady = 'true';
     } else {
       aside.dataset.asideScrollReady = 'true';
       gsap.set(aside, { opacity: 0, visibility: 'hidden' });
       gsap.set(lines, HERO_ASIDE_LINE_HIDDEN);
+      if (beniniNameplate) {
+        gsap.set(beniniNameplate, { opacity: 0, visibility: 'hidden' });
+      }
 
       const tl = gsap.timeline({
         scrollTrigger: dumbbellScrollTriggerConfig({
@@ -431,6 +446,14 @@ function initHeroVideoPhaseScroll() {
 
       tl.set(aside, { visibility: 'visible' }, 0);
       tl.to(aside, { opacity: 1, ease: 'none', duration: 0.05 }, 0);
+      if (beniniNameplate) {
+        tl.set(beniniNameplate, { visibility: 'visible' }, 0);
+        tl.to(
+          beniniNameplate,
+          { opacity: 1, ease: 'none', duration: 0.48 },
+          HERO_ASIDE_LINE_DELAY
+        );
+      }
       tl.fromTo(
         lines,
         HERO_ASIDE_LINE_HIDDEN,
@@ -455,10 +478,67 @@ function initHeroVideoPhaseScroll() {
   } else if (typeof window.registerManifestoViewportReveal === 'function') {
     window.registerManifestoViewportReveal();
   }
+
+  ScrollTrigger.refresh();
+}
+
+let heroPhaseScrollInitFrame = 0;
+let heroPhaseScrollSignature = '';
+
+function getHeroPhaseScrollSignature() {
+  const metrics = window.__heroVideoScrollMetrics;
+  return `${metrics?.scrollDistance || 0}:${!!window._dumbbell}`;
+}
+
+function scheduleHeroPhaseScrollInit() {
+  if (typeof window.requestAnimationFrame !== 'function') {
+    initDumbbellScroll();
+    return;
+  }
+
+  if (heroPhaseScrollInitFrame) {
+    return;
+  }
+
+  heroPhaseScrollInitFrame = requestAnimationFrame(() => {
+    heroPhaseScrollInitFrame = 0;
+
+    if (!window.__heroVideoScrollMetrics) {
+      scheduleHeroPhaseScrollInit();
+      return;
+    }
+
+    if (!window._dumbbell) {
+      if (!window.__heroPhaseScrollWaitAt) {
+        window.__heroPhaseScrollWaitAt = Date.now();
+      }
+      if (Date.now() - window.__heroPhaseScrollWaitAt < 2500) {
+        scheduleHeroPhaseScrollInit();
+        return;
+      }
+    }
+
+    const signature = getHeroPhaseScrollSignature();
+    if (signature === heroPhaseScrollSignature) {
+      return;
+    }
+    heroPhaseScrollSignature = signature;
+
+    initHeroVideoPhaseScroll();
+  });
 }
 
 function initDumbbellScroll() {
-  prepareDumbbellForScroll();
+  if (!window._dumbbell) {
+    scheduleHeroPhaseScrollInit();
+    return;
+  }
+
+  const signature = getHeroPhaseScrollSignature();
+  if (signature === heroPhaseScrollSignature) {
+    return;
+  }
+  heroPhaseScrollSignature = signature;
   initHeroVideoPhaseScroll();
 }
 
@@ -518,8 +598,16 @@ function initDumbbellOrbit() {
   const slot = document.getElementById('hero-visual-gltf-slot');
   if (!slot) return;
 
-  const W = Math.max(slot.offsetWidth, 1);
-  const H = Math.max(slot.offsetHeight, 1);
+  const resizeRenderer = () => {
+    const width = Math.max(slot.clientWidth, 1);
+    const height = Math.max(slot.clientHeight, 1);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+  };
+
+  const W = Math.max(slot.clientWidth, 1);
+  const H = Math.max(slot.clientHeight, 1);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(38, W / H, 0.1, 100);
@@ -552,11 +640,30 @@ function initDumbbellOrbit() {
     scene.add(model);
     window._dumbbell = model;
     window._dumbbellFittedScale = fittedScale;
-    initDumbbellScroll();
+    scheduleHeroPhaseScrollInit();
   });
+
+  resizeRenderer();
+  window.addEventListener('resize', resizeRenderer);
+  if (typeof ResizeObserver !== 'undefined') {
+    const resizeObserver = new ResizeObserver(() => resizeRenderer());
+    resizeObserver.observe(slot);
+  }
+
+  function shouldRenderDumbbell() {
+    if (typeof window.isHeroVideoScrubActive === 'function') {
+      return window.isHeroVideoScrubActive();
+    }
+    const visual = document.getElementById('hero-visual');
+    if (!visual) return false;
+    const rect = visual.getBoundingClientRect();
+    return rect.bottom > 0 && rect.top < window.innerHeight;
+  }
 
   function render() {
     requestAnimationFrame(render);
+    if (!shouldRenderDumbbell()) return;
+
     renderer.render(scene, camera);
   }
   render();
@@ -641,6 +748,7 @@ function initHeroBlueprintGridParallax() {
 window.initDumbbellOrbit = initDumbbellOrbit;
 window.initHeroDumbbell = initDumbbellOrbit;
 window.initDumbbellScroll = initDumbbellScroll;
+window.scheduleHeroPhaseScrollInit = scheduleHeroPhaseScrollInit;
 window.initHeroVideoPhaseScroll = initHeroVideoPhaseScroll;
 window.initHeroBlueprintGridParallax = initHeroBlueprintGridParallax;
 window.killHeroPhaseScrolls = killHeroPhaseScrolls;

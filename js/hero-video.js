@@ -4,6 +4,8 @@ const BENINI_REVEAL_LEAD_SEC = 2;
 const BENINI_HOLD_SCROLL_VH = { mobile: 0.85, desktop: 1.15 };
 const HERO_ASIDE_TEXT_HOLD_VH = { mobile: 0.55, desktop: 0.72 };
 const HERO_OVERLAP_SCROLL_VH = { mobile: 1, desktop: 1 };
+const KEYHOLE_PIN_DELAY_RATIO = 0.22;
+const KEYHOLE_SCROLL_RATIO = { mobile: 0.2, desktop: 0.24 };
 const BENINI_BLUR_MAX = { mobile: 5, desktop: 9 };
 
 const isMobileViewport = () => window.matchMedia('(max-width: 768px)').matches;
@@ -108,10 +110,22 @@ function setVideoBackdropFx(pin, eased) {
   pin.style.setProperty('--hero-video-saturate', String(1 - eased * 0.04));
 }
 
+let lastBeniniRevealEased = -1;
+
 function updateBeniniReveal(videoTime, duration, pin, beniniWrap, beniniImg) {
   if (!beniniWrap || !beniniImg) return;
 
   const eased = getBeniniRevealFromTime(videoTime, duration);
+
+  if (
+    lastBeniniRevealEased >= 0 &&
+    Math.abs(eased - lastBeniniRevealEased) < 0.012 &&
+    eased > 0.01 &&
+    eased < 0.99
+  ) {
+    return;
+  }
+  lastBeniniRevealEased = eased;
 
   if (heroVideoReducedMotion()) {
     const on = eased > 0.5;
@@ -153,7 +167,20 @@ function killHeroKeyholeReveal() {
   }
 }
 
-function initHeroKeyholeReveal(wrap) {
+function getKeyholeScrollDistance(scrollDistance) {
+  const vh = window.innerHeight;
+  const mobile = isMobileViewport();
+  const ratio = mobile ? KEYHOLE_SCROLL_RATIO.mobile : KEYHOLE_SCROLL_RATIO.desktop;
+  const vhCap = Math.round(vh * (mobile ? 0.52 : 0.62));
+
+  if (scrollDistance) {
+    return Math.max(Math.round(vh * 0.28), Math.min(Math.round(scrollDistance * ratio), vhCap));
+  }
+
+  return vhCap;
+}
+
+function initHeroKeyholeReveal(wrap, scrollDistance) {
   const keyhole = document.getElementById('hero-visual-keyhole');
   if (!keyhole || !wrap || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
     return;
@@ -170,6 +197,7 @@ function initHeroKeyholeReveal(wrap) {
   const mobile = isMobileViewport();
   const maskStart = mobile ? '40vmin' : '48vmin';
   const maskEnd = mobile ? '54vmin' : '64vmin';
+  const keyholeScrollPx = getKeyholeScrollDistance(scrollDistance);
 
   gsap.set(keyhole, { opacity: 1, '--keyhole-mask-size': maskStart });
 
@@ -177,20 +205,20 @@ function initHeroKeyholeReveal(wrap) {
     scrollTrigger: heroScrollTriggerConfig({
       id: 'hero-keyhole-reveal',
       trigger: wrap,
-      start: mobile ? 'top 90%' : 'top 85%',
-      end: mobile ? 'top 20%' : 'top 14%',
+      start: 'top top',
+      end: `+=${keyholeScrollPx}`,
       scrub: mobile ? 1 : 1.25,
     }),
   });
 
-  tl.to({}, { duration: 0.32 });
+  tl.to({}, { duration: KEYHOLE_PIN_DELAY_RATIO, ease: 'none' });
 
   tl.to(
     keyhole,
     {
       '--keyhole-mask-size': maskEnd,
       ease: 'none',
-      duration: 0.4,
+      duration: 0.36,
     },
     '>'
   );
@@ -200,7 +228,7 @@ function initHeroKeyholeReveal(wrap) {
     {
       opacity: 0,
       ease: 'none',
-      duration: 0.28,
+      duration: 0.26,
     },
     '>'
   );
@@ -223,8 +251,6 @@ function initHeroScrollVideo() {
 
   if (!wrap || !pin || !media || !video) return;
 
-  initHeroKeyholeReveal(wrap);
-
   video.pause();
   video.muted = true;
   video.setAttribute('playsinline', '');
@@ -233,6 +259,7 @@ function initHeroScrollVideo() {
 
   let resizeTimer;
   let scrubTrigger;
+  let scrubBuiltDuration = 0;
 
   const applyAspectRatio = () => {
     const vw = video.videoWidth;
@@ -259,6 +286,12 @@ function initHeroScrollVideo() {
     if (!duration || !Number.isFinite(duration)) {
       return;
     }
+
+    if (scrubBuiltDuration === duration && scrubTrigger) {
+      return;
+    }
+    scrubBuiltDuration = duration;
+    lastBeniniRevealEased = -1;
 
     if (scrubTrigger) scrubTrigger.kill();
 
@@ -339,9 +372,13 @@ function initHeroScrollVideo() {
       })
     );
 
+    initHeroKeyholeReveal(wrap, scrollDistance);
+
     ScrollTrigger.refresh();
 
-    if (typeof window.initHeroVideoPhaseScroll === 'function') {
+    if (typeof window.scheduleHeroPhaseScrollInit === 'function') {
+      window.scheduleHeroPhaseScrollInit();
+    } else if (typeof window.initHeroVideoPhaseScroll === 'function') {
       requestAnimationFrame(() => window.initHeroVideoPhaseScroll());
     }
 
@@ -353,14 +390,12 @@ function initHeroScrollVideo() {
   const onReady = () => {
     applyAspectRatio();
     buildScrub();
-    ScrollTrigger.refresh();
     if (typeof window.triggerScrollRevealCheck === 'function') {
       requestAnimationFrame(() => window.triggerScrollRevealCheck());
     }
   };
 
   video.addEventListener('loadedmetadata', onReady);
-  video.addEventListener('loadeddata', onReady);
 
   if (video.readyState >= 1) onReady();
 
@@ -369,12 +404,17 @@ function initHeroScrollVideo() {
     resizeTimer = setTimeout(() => {
       applyAspectRatio();
       buildScrub();
-      initHeroKeyholeReveal(wrap);
       ScrollTrigger.refresh();
     }, 200);
   });
 }
 
+function isHeroVideoScrubActive() {
+  if (typeof ScrollTrigger === 'undefined') return false;
+  return Boolean(ScrollTrigger.getById('hero-video-scrub')?.isActive);
+}
+
 window.initHeroScrollVideo = initHeroScrollVideo;
 window.initHeroKeyholeReveal = initHeroKeyholeReveal;
 window.killHeroKeyholeReveal = killHeroKeyholeReveal;
+window.isHeroVideoScrubActive = isHeroVideoScrubActive;

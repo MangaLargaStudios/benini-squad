@@ -685,43 +685,22 @@ html.nav-menu-open {
   align-items: center;
   justify-content: center;
   line-height: 1;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  color: var(--col-cream);
-  text-decoration: none;
-  padding: 7px 16px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
   white-space: nowrap;
-  transition:
-    background var(--dur-fast),
-    color var(--dur-fast);
 }
 
-.nav-action-ring {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
+.nav-action.btn-primary.btn-glass {
+  gap: 8px;
+  padding: 8px 14px 8px 16px;
   border-radius: 8px;
-  overflow: visible;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  overflow: hidden;
+  text-decoration: none;
 }
 
-.nav-action-ring-svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-.nav-action-ring-path {
-  fill: none;
-  stroke: rgba(238, 235, 221, 0.45);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-  transition: stroke var(--dur-fast);
+.nav-action.btn-primary.btn-glass .btn-primary__icon {
+  font-size: 13px;
+  line-height: 1;
 }
 
 .nav-action-label {
@@ -730,14 +709,6 @@ html.nav-menu-open {
   display: inline-flex;
   align-items: center;
   line-height: 1;
-}
-
-.nav-action:hover {
-  background: rgba(238, 235, 221, 0.08);
-}
-
-.nav-action:hover .nav-action-ring-path {
-  stroke: rgba(238, 235, 221, 0.7);
 }
 
 /* Nav split text (entrada no load) */
@@ -763,6 +734,10 @@ html.nav-menu-open {
 
 .nav-bar-glass.is-entering {
   will-change: transform;
+}
+
+.nav-action.is-entering {
+  will-change: transform, opacity;
 }
 
 /* ────────────────────────────────────────────────────
@@ -1085,19 +1060,72 @@ html.nav-menu-open {
   will-change: opacity, transform;
 }
 
-.hero-visual-benini-img {
+.hero-visual-benini-figure {
   position: relative;
   z-index: 1;
   display: block;
   width: min(82vw, 620px);
   max-width: 100%;
   max-height: 96%;
+}
+
+.hero-visual-benini-img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  max-height: 96vh;
   height: auto;
   object-fit: contain;
   object-position: center bottom;
   filter: drop-shadow(0 24px 72px rgba(0, 0, 0, 0.55)),
     drop-shadow(0 0 40px rgba(217, 159, 102, 0.3));
   will-change: transform, opacity;
+}
+
+.hero-visual-benini-nameplate {
+  position: absolute;
+  z-index: 2;
+  left: 58%;
+  top: 28%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(9px, 1.1vw, 13px) clamp(14px, 1.8vw, 22px);
+  border-radius: 8px;
+  isolation: isolate;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(80px, -42%);
+  will-change: transform, opacity;
+}
+
+.hero-visual-benini-nameplate__glass {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: rgba(10, 8, 9, 0.26);
+  backdrop-filter: blur(20px) saturate(165%);
+  -webkit-backdrop-filter: blur(20px) saturate(165%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 10px 36px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.hero-visual-benini-nameplate__label {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-display, 'DM Sans', sans-serif);
+  font-size: clamp(0.78rem, 1.25vw, 1.02rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--col-cream, #eeebdd);
+  white-space: nowrap;
 }
 
 .hero-visual-blueprint-grid:not(.hero-visual-blueprint-grid--blur) {
@@ -1370,19 +1398,6 @@ html.nav-menu-open {
   );
 }
 
-.hero-visual-results-shape {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 50%;
-  height: 100%;
-  background: var(--col-cream);
-  z-index: 6;
-  pointer-events: none;
-  will-change: transform;
-}
-
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .hero-visual-blur-layer--right.hero-visual-blur-panel {
     background: linear-gradient(
@@ -1415,67 +1430,87 @@ html.nav-menu-open {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
+  gap: clamp(0.55rem, 1.75vh, 0.95rem);
   box-sizing: border-box;
-  width: auto;
-  max-width: none;
+  width: 50%;
+  max-width: 50%;
   padding:
-    clamp(20px, 4vh, 48px)
-    clamp(24px, 3.5vw, 56px)
-    clamp(20px, 4vh, 48px)
-    clamp(16px, 2.5vw, 40px);
+    clamp(12px, 2.2vh, 24px)
+    clamp(20px, 3.5vw, 40px)
+    clamp(12px, 2.2vh, 24px)
+    clamp(20px, 3.5vw, 40px);
   transform: none;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  color: var(--col-dark, #3a3334);
+  overflow: hidden;
+  text-align: center;
+  color: var(--col-cream, #eeebdd);
+}
+
+.hero-benini-text-aside > * {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .hero-benini-text-aside-eyebrow {
-  margin: 0 0 clamp(0.75rem, 2vh, 1.25rem);
-  font-size: clamp(0.68rem, 1vw, 0.88rem);
-  letter-spacing: 0.3em;
+  margin: 0;
+  font-size: clamp(0.72rem, 1.35vw, 0.95rem);
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--col-gold-dim, #b07f48);
 }
 
 .hero-benini-text-aside-title {
-  margin: 0 0 clamp(0.85rem, 2.5vh, 1.5rem);
+  margin: 0;
   font-family: var(--font-display, 'DM Sans', sans-serif);
-  font-size: clamp(1.85rem, 5.2vw, 3.85rem);
-  line-height: 1;
+  font-size: clamp(1.75rem, min(4.8vw, 6.8vh), 3.45rem);
+  line-height: 1.06;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: -0.02em;
-  max-width: 11em;
+  max-width: 100%;
 }
 
 .hero-benini-text-aside .aside-line-wrap {
   display: block;
   overflow: hidden;
-  margin: 0 0 0.12em;
+  margin: 0;
+  line-height: inherit;
+  max-width: 100%;
+}
+
+.hero-benini-text-aside-title .aside-line-wrap + .aside-line-wrap {
+  margin-top: 0.06em;
 }
 
 .hero-benini-text-aside .aside-line {
   display: block;
+  max-width: 100%;
   will-change: transform, opacity;
 }
 
 .hero-benini-text-aside .aside-line .gold {
-  color: var(--col-gold-dim, #b07f48);
+  color: var(--col-gold, #d99f66);
   font-style: italic;
 }
 
 .hero-benini-text-aside-eyebrow.aside-line-wrap {
-  margin-bottom: clamp(0.75rem, 2vh, 1.25rem);
+  margin-bottom: 0;
 }
 
 .hero-benini-text-aside-body {
   margin: 0;
-  font-size: clamp(0.95rem, 1.75vw, 1.4rem);
-  line-height: 1.7;
-  max-width: 28em;
-  color: rgba(58, 51, 52, 0.6);
+  font-size: clamp(1rem, min(1.65vw, 2.4vh), 1.32rem);
+  line-height: 1.4;
+  max-width: 100%;
+  color: var(--col-cream, #eeebdd);
+}
+
+.hero-benini-text-aside-body .aside-line-wrap + .aside-line-wrap {
+  margin-top: 0.1em;
 }
 
 .hero-visual-vignette {
@@ -2591,6 +2626,7 @@ body.is-hero-manifesto-overlap #manifesto {
   );
   overflow: visible;
   cursor: default;
+  contain: layout style;
 }
 
 .woman-models-slots {
@@ -2619,11 +2655,11 @@ body.is-hero-manifesto-overlap #manifesto {
   isolation: isolate;
   min-height: 0;
   border-radius: clamp(12px, 1.2vw, 18px);
-  border: 1px solid color-mix(in srgb, var(--col-gold-dim) 32%, rgba(255, 255, 255, 0.28));
-  background: transparent;
+  border: 1px solid rgba(217, 159, 102, 0.15);
+  background: linear-gradient(135deg, rgba(58, 51, 52, 0.95) 0%, rgba(42, 37, 38, 0.98) 100%);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--col-gold-light) 45%, transparent),
-    0 8px 28px color-mix(in srgb, var(--col-gold-dim) 12%, transparent);
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 28px rgba(0, 0, 0, 0.28);
 }
 
 .woman-models-card::before {
@@ -2634,24 +2670,11 @@ body.is-hero-manifesto-overlap #manifesto {
   border-radius: inherit;
   background: linear-gradient(
     165deg,
-    color-mix(in srgb, var(--col-gold-dim) 22%, transparent) 0%,
-    color-mix(in srgb, var(--col-gold-dim) 14%, transparent) 36%,
-    color-mix(in srgb, var(--col-gold) 10%, transparent) 62%,
-    color-mix(in srgb, var(--col-gold-light) 8%, transparent) 86%,
-    color-mix(in srgb, var(--col-gold-light) 4%, var(--col-cream)) 100%
+    rgba(217, 159, 102, 0.1) 0%,
+    rgba(217, 159, 102, 0.04) 34%,
+    transparent 68%
   );
-  backdrop-filter: blur(22px) saturate(150%);
-  -webkit-backdrop-filter: blur(22px) saturate(150%);
-}
-
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .woman-models-card::before {
-    background: linear-gradient(
-      165deg,
-      color-mix(in srgb, var(--col-gold-dim) 58%, var(--col-cream)) 0%,
-      color-mix(in srgb, var(--col-gold-light) 42%, var(--col-cream)) 100%
-    );
-  }
+  opacity: 1;
 }
 
 @media (max-width: 768px) {
