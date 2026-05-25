@@ -4,7 +4,9 @@
   "private": true,
   "description": "Site estático Benini Squad",
   "scripts": {
-    "dev": "live-server --port=3000 --open=index.html --ignore=.cursor/** --ignorePattern=\\.cursor"
+    "dev": "live-server --port=3000 --open=index.html --ignore=.cursor/** --ignorePattern=\\.cursor",
+    "build": "node scripts/build.mjs",
+    "preview": "live-server dist --port=3000 --open=index.html"
   },
   "devDependencies": {
     "live-server": "^1.2.2"
