@@ -4,7 +4,7 @@ const WOMAN_MODEL_URLS = [
   'models/3d/Woman-Models/athlete_in_black_and_red_activewear.glb',
   'models/3d/Woman-Models/stretching_in_a_gray_workout_set.glb',
   'models/3d/Woman-Models/stretching_in_lilac_workout_set.glb',
-  'models/3d/Woman-Models/stretching_pose_in_black_workout_set.glb',
+  'models/3d/Woman-Models/stretching_pose_in_black_workout_set.pages.glb',
 ];
 
 const WOMAN_MODEL_TARGET_HEIGHT = 2.482;
@@ -1049,7 +1049,10 @@ function initWomanModelsStage() {
   resize();
   window.addEventListener('resize', resize);
 
-  const loader = new THREE.GLTFLoader();
+  const loader =
+    typeof window.createBeniniGLTFLoader === 'function'
+      ? window.createBeniniGLTFLoader()
+      : new THREE.GLTFLoader();
 
   let loadedModels = [];
 

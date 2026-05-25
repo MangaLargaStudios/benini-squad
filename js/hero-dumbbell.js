@@ -1,6 +1,6 @@
 'use strict';
 
-const DUMBBELL_MODEL_URL = 'models/3d/domyos_dumbbell.glb';
+const DUMBBELL_MODEL_URL = 'models/3d/domyos_dumbbell.pages.glb';
 const DUMBBELL_FIT_SIZE = 2.975;
 const DUMBBELL_SCALE_START_MULT = 0.918;
 const DUMBBELL_SCALE_END_MULT = 1.122;
@@ -627,7 +627,10 @@ function initDumbbellOrbit() {
 
   addDumbbellLights(scene);
 
-  const loader = new THREE.GLTFLoader();
+  const loader =
+    typeof window.createBeniniGLTFLoader === 'function'
+      ? window.createBeniniGLTFLoader()
+      : new THREE.GLTFLoader();
   loader.load(DUMBBELL_MODEL_URL, (gltf) => {
     const model = gltf.scene;
 

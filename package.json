@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "live-server --port=3000 --open=index.html --ignore=.cursor/** --ignorePattern=\\.cursor",
     "build": "node scripts/build.mjs",
+    "compress:models": "node scripts/compress-models.mjs",
     "preview": "live-server dist --port=3000 --open=index.html"
   },
   "devDependencies": {
