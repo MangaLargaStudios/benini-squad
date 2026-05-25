@@ -404,11 +404,22 @@ function isWomanModelsMobileLayout() {
   return window.matchMedia(WOMAN_MODEL_MOBILE_MQ).matches;
 }
 
+function getWomanModelsLayoutScaleMultiplier() {
+  const section = document.getElementById('woman-models');
+  if (!section) return 1;
+
+  const raw = getComputedStyle(section).getPropertyValue('--woman-models-layout-scale').trim();
+  const parsed = parseFloat(raw);
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
+
 function applyWomanModelLayoutScale(model) {
   const nativeScale = model.userData.nativeScale ?? model.scale.x;
-  const layoutScale = isWomanModelsMobileLayout()
-    ? nativeScale * WOMAN_MODEL_MOBILE_SCALE
-    : nativeScale;
+  const layoutMult = isWomanModelsMobileLayout()
+    ? WOMAN_MODEL_MOBILE_SCALE
+    : getWomanModelsLayoutScaleMultiplier();
+  const layoutScale = nativeScale * layoutMult;
 
   model.scale.setScalar(layoutScale);
   model.userData.baseScale = layoutScale;

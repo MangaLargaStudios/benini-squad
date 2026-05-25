@@ -2614,6 +2614,7 @@ body.is-hero-manifesto-overlap #manifesto {
 
 .section-woman-models {
   --woman-models-bottom-space: 90px;
+  --woman-models-layout-scale: 1;
   min-height: clamp(
     calc(580px + var(--woman-models-bottom-space)),
     calc(78vh + 48px + var(--woman-models-bottom-space)),
@@ -2631,16 +2632,21 @@ body.is-hero-manifesto-overlap #manifesto {
 
 .woman-models-slots {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: var(--layout-gutter);
+  bottom: 0;
+  left: var(--layout-gutter);
   z-index: 0;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, 1fr);
   gap: clamp(10px, 1.2vw, 14px);
   box-sizing: border-box;
-  width: 100%;
+  width: auto;
   height: 100%;
-  padding: clamp(20px, 4.5vh, 44px) clamp(10px, 2vw, 20px);
+  padding: clamp(20px, 4.5vh, 44px) clamp(6px, 0.8vw, 10px);
+  transform: scale(var(--woman-models-layout-scale));
+  transform-origin: center center;
   pointer-events: none;
 }
 
@@ -2760,10 +2766,15 @@ body.is-hero-manifesto-overlap #manifesto {
 
 .woman-models-stage {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: var(--layout-gutter);
+  bottom: 0;
+  left: var(--layout-gutter);
   z-index: 3;
-  width: 100%;
+  width: auto;
   height: 100%;
+  transform: scale(var(--woman-models-layout-scale));
+  transform-origin: center center;
   pointer-events: none;
 }
 
@@ -2784,14 +2795,20 @@ body.is-hero-manifesto-overlap #manifesto {
 
 .woman-models-columns {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: var(--layout-gutter);
+  bottom: 0;
+  left: var(--layout-gutter);
   z-index: 3;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, 1fr);
   gap: clamp(10px, 1.2vw, 14px);
   box-sizing: border-box;
-  padding: clamp(20px, 4.5vh, 44px) clamp(10px, 2vw, 20px);
+  width: auto;
+  padding: clamp(20px, 4.5vh, 44px) clamp(6px, 0.8vw, 10px);
+  transform: scale(var(--woman-models-layout-scale));
+  transform-origin: center center;
   pointer-events: none;
 }
 
@@ -3038,14 +3055,15 @@ body.is-hero-manifesto-overlap #manifesto {
   .woman-models-slots {
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: none;
-    padding: clamp(28px, 5.5vh, 52px) clamp(14px, 2vw, 28px);
+    --woman-models-layout-scale: 0.94;
+    padding: clamp(28px, 5.5vh, 52px) clamp(6px, 0.8vw, 10px);
   }
 
   .woman-models-columns {
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: none;
     gap: clamp(10px, 1.35vw, 16px);
-    padding: clamp(28px, 5.5vh, 52px) clamp(14px, 2vw, 28px);
+    padding: clamp(28px, 5.5vh, 52px) clamp(6px, 0.8vw, 10px);
   }
 }
 
@@ -3053,6 +3071,15 @@ body.is-hero-manifesto-overlap #manifesto {
 @media (min-width: 1025px) {
   :root {
     --layout-gutter: 56px;
+  }
+
+  .section-woman-models {
+    --woman-models-layout-scale: 0.9;
+  }
+
+  .woman-models-slots,
+  .woman-models-columns {
+    padding: clamp(28px, 5.5vh, 52px) clamp(4px, 0.5vw, 8px);
   }
 
   .nav {
