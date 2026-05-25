@@ -716,7 +716,8 @@ function initWomanModelsCards(section, count) {
     slotsEl.appendChild(slot);
   }
 
-  section.insertBefore(slotsEl, section.firstChild);
+  const stage = section.querySelector('.woman-models-stage');
+  section.insertBefore(slotsEl, stage || section.firstChild);
 }
 
 function initWomanModelsUI(section, models, lightingRig, renderer, refitLayout, onRenderNeeded) {

@@ -2614,7 +2614,9 @@ body.is-hero-manifesto-overlap #manifesto {
 
 .section-woman-models {
   --woman-models-bottom-space: 90px;
+  --woman-models-title-space: clamp(72px, 10vh, 108px);
   --woman-models-layout-scale: 1;
+  position: relative;
   min-height: clamp(
     calc(580px + var(--woman-models-bottom-space)),
     calc(78vh + 48px + var(--woman-models-bottom-space)),
@@ -2630,9 +2632,24 @@ body.is-hero-manifesto-overlap #manifesto {
   contain: layout style;
 }
 
+.woman-models-section-title {
+  position: relative;
+  z-index: 4;
+  margin: 0;
+  padding: clamp(28px, 4.2vh, 48px) var(--layout-gutter) clamp(10px, 2vh, 18px);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.1rem, 2.4vw, 1.75rem);
+  line-height: 1.15;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--col-dark);
+}
+
 .woman-models-slots {
   position: absolute;
-  top: 0;
+  top: var(--woman-models-title-space);
   right: var(--layout-gutter);
   bottom: 0;
   left: var(--layout-gutter);
@@ -2766,7 +2783,7 @@ body.is-hero-manifesto-overlap #manifesto {
 
 .woman-models-stage {
   position: absolute;
-  top: 0;
+  top: var(--woman-models-title-space);
   right: var(--layout-gutter);
   bottom: 0;
   left: var(--layout-gutter);
@@ -2784,7 +2801,10 @@ body.is-hero-manifesto-overlap #manifesto {
 
 .woman-models-ui {
   position: absolute;
-  inset: 0;
+  top: var(--woman-models-title-space);
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 5;
   pointer-events: none;
 }
@@ -2869,7 +2889,10 @@ body.is-hero-manifesto-overlap #manifesto {
 
 .woman-models-focus-overlay {
   position: absolute;
-  inset: 0;
+  top: var(--woman-models-title-space);
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 2;
   opacity: 0;
   background: color-mix(in srgb, var(--col-cream) 40%, transparent);
