@@ -2116,6 +2116,7 @@ body.is-hero-manifesto-overlap #manifesto {
   padding: var(--space-xl) 24px;
   background: var(--col-dark);
   position: relative;
+  z-index: 1;
 }
 .section-eyebrow {
   font-family: var(--font-display);
@@ -2224,12 +2225,40 @@ body.is-hero-manifesto-overlap #manifesto {
   padding: var(--space-xl) var(--layout-gutter);
   background: var(--col-cream);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 .section-transformacao .section-eyebrow { color: var(--col-gold-dim); }
 .section-transformacao .section-title { color: var(--col-dark); }
 
+.transform-grid-wrap {
+  position: relative;
+  margin-top: clamp(24px, 4vh, 48px);
+  overflow: visible;
+}
+
+.transform-circular-text-mount {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  width: clamp(280px, 42vw, 520px);
+  height: clamp(280px, 42vw, 520px);
+  pointer-events: none;
+}
+
+.transform-circular-text-mount .circular-text,
+.transform-circular-text-mount .transform-circular-text {
+  width: 100%;
+  height: 100%;
+  font-size: clamp(24px, 3.2vw, 48px);
+  color: #000;
+  text-shadow: none;
+  opacity: 0.92;
+}
+
 .transform-grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: 1fr;
   gap: 2px;
@@ -2238,11 +2267,14 @@ body.is-hero-manifesto-overlap #manifesto {
 }
 .transform-item {
   position: relative;
+  z-index: 1;
   aspect-ratio: 3/4;
   background: var(--col-dark-mid);
   overflow: hidden;
   cursor: pointer;
+  isolation: isolate;
 }
+
 .transform-item img {
   width: 100%; height: 100%;
   object-fit: cover;
@@ -2612,24 +2644,30 @@ body.is-hero-manifesto-overlap #manifesto {
   background: var(--col-cream);
 }
 
+.section-parallax.section-woman-models {
+  height: auto;
+  overflow: visible;
+  background: var(--col-cream);
+}
+
 .section-woman-models {
-  --woman-models-bottom-space: 90px;
+  --woman-models-bottom-space: clamp(56px, 9vh, 128px);
+  --woman-models-grid-min: clamp(520px, 68vh, 860px);
   --woman-models-title-space: clamp(72px, 10vh, 108px);
+  --woman-models-grid-lift: 60px;
+  --woman-models-grid-top: calc(var(--woman-models-title-space) - var(--woman-models-grid-lift));
   --woman-models-layout-scale: 1;
   position: relative;
-  min-height: clamp(
-    calc(580px + var(--woman-models-bottom-space)),
-    calc(78vh + 48px + var(--woman-models-bottom-space)),
-    calc(920px + var(--woman-models-bottom-space))
+  z-index: 2;
+  box-sizing: border-box;
+  min-height: calc(
+    var(--woman-models-title-space) + var(--woman-models-grid-min) +
+      var(--woman-models-bottom-space)
   );
-  height: clamp(
-    calc(580px + var(--woman-models-bottom-space)),
-    calc(78vh + 48px + var(--woman-models-bottom-space)),
-    calc(920px + var(--woman-models-bottom-space))
-  );
+  height: auto;
+  padding-bottom: var(--woman-models-bottom-space);
   overflow: visible;
   cursor: default;
-  contain: layout style;
 }
 
 .woman-models-section-title {
@@ -2649,7 +2687,7 @@ body.is-hero-manifesto-overlap #manifesto {
 
 .woman-models-slots {
   position: absolute;
-  top: var(--woman-models-title-space);
+  top: var(--woman-models-grid-top);
   right: var(--layout-gutter);
   bottom: 0;
   left: var(--layout-gutter);
@@ -2670,6 +2708,7 @@ body.is-hero-manifesto-overlap #manifesto {
 .woman-models-slot {
   position: relative;
   min-height: 0;
+  overflow: visible;
 }
 
 .woman-models-card {
@@ -2677,6 +2716,7 @@ body.is-hero-manifesto-overlap #manifesto {
   inset: 0;
   isolation: isolate;
   min-height: 0;
+  overflow: visible;
   border-radius: clamp(12px, 1.2vw, 18px);
   border: 1px solid rgba(217, 159, 102, 0.15);
   background: linear-gradient(135deg, rgba(58, 51, 52, 0.95) 0%, rgba(42, 37, 38, 0.98) 100%);
@@ -2702,16 +2742,8 @@ body.is-hero-manifesto-overlap #manifesto {
 
 @media (max-width: 768px) {
   .section-woman-models {
-    min-height: clamp(
-      calc(900px + var(--woman-models-bottom-space, 90px)),
-      118vh,
-      calc(1120px + var(--woman-models-bottom-space, 90px))
-    );
-    height: clamp(
-      calc(900px + var(--woman-models-bottom-space, 90px)),
-      118vh,
-      calc(1120px + var(--woman-models-bottom-space, 90px))
-    );
+    --woman-models-grid-min: clamp(640px, 92vh, 980px);
+    --woman-models-bottom-space: clamp(64px, 10vh, 140px);
   }
 
   .woman-models-columns {
@@ -2783,13 +2815,14 @@ body.is-hero-manifesto-overlap #manifesto {
 
 .woman-models-stage {
   position: absolute;
-  top: var(--woman-models-title-space);
+  top: var(--woman-models-grid-top);
   right: var(--layout-gutter);
   bottom: 0;
   left: var(--layout-gutter);
   z-index: 3;
   width: auto;
   height: 100%;
+  overflow: visible;
   transform: scale(var(--woman-models-layout-scale));
   transform-origin: center center;
   pointer-events: none;
@@ -2801,7 +2834,7 @@ body.is-hero-manifesto-overlap #manifesto {
 
 .woman-models-ui {
   position: absolute;
-  top: var(--woman-models-title-space);
+  top: var(--woman-models-grid-top);
   right: 0;
   bottom: 0;
   left: 0;
@@ -2889,7 +2922,7 @@ body.is-hero-manifesto-overlap #manifesto {
 
 .woman-models-focus-overlay {
   position: absolute;
-  top: var(--woman-models-title-space);
+  top: var(--woman-models-grid-top);
   right: 0;
   bottom: 0;
   left: 0;

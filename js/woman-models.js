@@ -12,9 +12,12 @@ const WOMAN_MODEL_SPACING = 1.88;
 const WOMAN_MODEL_CAMERA_PADDING = 1.14;
 const WOMAN_MODEL_MOBILE_SCALE = 0.76;
 const WOMAN_MODEL_MOBILE_SPACING_X = 1.42;
-const WOMAN_MODEL_MOBILE_ROW_GAP =
-  WOMAN_MODEL_TARGET_HEIGHT * 1.2;
-/** Wireframe — linhas douradas (estilo OGL), sem preenchimento sólido */
+/** Ponto vertical de ancoragem dentro do card (0 = topo, 1 = base) */
+const WOMAN_MODEL_SLOT_ANCHOR_Y = 0.58;
+/** Deslocamento vertical global das personas (px na tela, para cima) */
+const WOMAN_MODEL_VERTICAL_OFFSET_PX = 70;
+const WOMAN_MODELS_MAX_DPR = 2;
+/** Wireframe — linhas douradas (estilo OGL Wireframe / gl.LINES) */
 const WOMAN_WIREFRAME_LINE = 0xd99f66;
 const WOMAN_LIGHTING_LERP = 0.11;
 const WOMAN_LIGHTING_PRESETS = {
@@ -39,7 +42,6 @@ const WOMAN_LIGHTING_PRESETS = {
 };
 const WOMAN_MOUSE_YAW_MAX = 0.2;
 const WOMAN_MOUSE_INTERACTION_SMOOTH = 0.09;
-const WOMAN_HOVER_SCALE_MULT = 1.055;
 const WOMAN_GLITCH_TO_TEXTURED = [
   { w: 1, t: 0, ms: 48, j: 0.014 },
   { w: 0, t: 1, ms: 38, j: -0.02 },
@@ -64,8 +66,6 @@ const WOMAN_PERSONA_COPY = [
   { title: 'Persona 04', subtitle: 'Adicione um subtítulo para esta persona.' },
 ];
 
-const WOMAN_FOCUS_SCALE_MULT = 1.08;
-
 const WOMAN_MODEL_ROTATION_Y = {
   'athlete_in_black_and_red_activewear.glb': Math.PI / 2,
 };
@@ -73,6 +73,10 @@ const WOMAN_MODEL_ROTATION_Y = {
 function getWomanModelRotationY(url) {
   const filename = url.split('/').pop();
   return WOMAN_MODEL_ROTATION_Y[filename] ?? 0;
+}
+
+function getWomanModelsPixelRatio() {
+  return Math.min(window.devicePixelRatio || 1, WOMAN_MODELS_MAX_DPR);
 }
 
 function configureWomanModelMaterial(material) {
@@ -122,40 +126,32 @@ function cloneWomanModelMaterial(material) {
 }
 
 function createWomanWireframeMesh(mesh) {
-  const geometry = mesh.geometry;
   const skinned = mesh.isSkinnedMesh;
-  const lineMaterial = new THREE.MeshBasicMaterial({
+  const material = new THREE.MeshBasicMaterial({
     color: WOMAN_WIREFRAME_LINE,
     wireframe: true,
+    transparent: true,
+    opacity: 0.9,
+    depthWrite: false,
     side: THREE.DoubleSide,
     skinning: skinned,
-    transparent: true,
-    opacity: 0.94,
-    depthWrite: true,
-    polygonOffset: true,
-    polygonOffsetFactor: 1,
-    polygonOffsetUnits: 1,
   });
 
-  const shell = new THREE.Group();
-  shell.name = mesh.name ? `${mesh.name}-wireframe` : 'wireframe-shell';
-
   const lineMesh = skinned
-    ? new THREE.SkinnedMesh(geometry, lineMaterial)
-    : new THREE.Mesh(geometry, lineMaterial);
+    ? new THREE.SkinnedMesh(mesh.geometry, material)
+    : new THREE.Mesh(mesh.geometry, material);
 
   if (skinned) {
     lineMesh.bind(mesh.skeleton, mesh.bindMatrix);
     lineMesh.frustumCulled = mesh.frustumCulled;
   }
 
-  shell.add(lineMesh);
-  shell.userData.lineMesh = lineMesh;
-  shell.position.copy(mesh.position);
-  shell.rotation.copy(mesh.rotation);
-  shell.scale.copy(mesh.scale);
+  lineMesh.name = mesh.name ? `${mesh.name}-wireframe` : 'wireframe-shell';
+  lineMesh.position.copy(mesh.position);
+  lineMesh.rotation.copy(mesh.rotation);
+  lineMesh.scale.copy(mesh.scale);
 
-  return shell;
+  return lineMesh;
 }
 
 function createWomanTexturedMesh(mesh) {
@@ -404,28 +400,32 @@ function isWomanModelsMobileLayout() {
   return window.matchMedia(WOMAN_MODEL_MOBILE_MQ).matches;
 }
 
-function getWomanModelsLayoutScaleMultiplier() {
-  const section = document.getElementById('woman-models');
-  if (!section) return 1;
+function getWomanModelLayoutScale(model) {
+  const nativeScale = model.userData.nativeScale;
+  if (!Number.isFinite(nativeScale) || nativeScale <= 0) return null;
 
-  const raw = getComputedStyle(section).getPropertyValue('--woman-models-layout-scale').trim();
-  const parsed = parseFloat(raw);
+  if (isWomanModelsMobileLayout()) {
+    return nativeScale * WOMAN_MODEL_MOBILE_SCALE;
+  }
 
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+  return nativeScale;
 }
 
-function applyWomanModelLayoutScale(model) {
-  const nativeScale = model.userData.nativeScale ?? model.scale.x;
-  const layoutMult = isWomanModelsMobileLayout()
-    ? WOMAN_MODEL_MOBILE_SCALE
-    : getWomanModelsLayoutScaleMultiplier();
-  const layoutScale = nativeScale * layoutMult;
+function snapWomanModelLayoutScale(model) {
+  const layoutScale = getWomanModelLayoutScale(model);
+  if (layoutScale == null) return;
 
   model.scale.setScalar(layoutScale);
+  model.userData.layoutScale = layoutScale;
   model.userData.baseScale = layoutScale;
   model.userData.currentScale = layoutScale;
   model.userData.targetScale = layoutScale;
 }
+
+function snapAllWomanModelLayoutScales(models) {
+  models.forEach(snapWomanModelLayoutScale);
+}
+
 
 function getWomanModelsViewportWidth(camera, targetZ = 0) {
   const distance = Math.max(Math.abs(camera.position.z - targetZ), 0.001);
@@ -434,7 +434,44 @@ function getWomanModelsViewportWidth(camera, targetZ = 0) {
   return 2 * Math.tan(hFov / 2) * distance;
 }
 
-function layoutWomanModelsFromSlots(group, camera, section) {
+function getWomanModelsViewportHeight(camera, targetZ = 0) {
+  const distance = Math.max(Math.abs(camera.position.z - targetZ), 0.001);
+  const vFov = (camera.fov * Math.PI) / 180;
+  return 2 * Math.tan(vFov / 2) * distance;
+}
+
+function layoutWomanModelXFromSlot(model, slotRect, stageRect, viewWidth) {
+  const centerNorm =
+    (slotRect.left + slotRect.width / 2 - stageRect.left) / stageRect.width - 0.5;
+  const targetCenterX = centerNorm * viewWidth;
+
+  model.position.x = 0;
+  const box = new THREE.Box3().setFromObject(model);
+  const visualCenterX = (box.min.x + box.max.x) * 0.5;
+
+  model.position.x = targetCenterX - visualCenterX;
+}
+
+function getWomanModelsVerticalOffsetWorld(stageRect, viewHeight) {
+  if (!stageRect?.height || !Number.isFinite(viewHeight)) return 0;
+  return (WOMAN_MODEL_VERTICAL_OFFSET_PX / stageRect.height) * viewHeight;
+}
+
+function layoutWomanModelYFromSlot(model, cardRect, stageRect, viewHeight) {
+  const anchorNorm =
+    (cardRect.top + cardRect.height * WOMAN_MODEL_SLOT_ANCHOR_Y - stageRect.top) /
+      stageRect.height -
+    0.5;
+  const targetCenterY = -anchorNorm * viewHeight;
+  const verticalOffset = getWomanModelsVerticalOffsetWorld(stageRect, viewHeight);
+
+  model.position.y = 0;
+  const box = new THREE.Box3().setFromObject(model);
+  const visualCenterY = (box.min.y + box.max.y) * 0.5;
+  model.position.y = targetCenterY - visualCenterY + verticalOffset;
+}
+
+function bootstrapWomanModelsLayout(group, camera, section) {
   const slots = section?.querySelectorAll('.woman-models-slot');
   const stage = section?.querySelector('.woman-models-stage');
   const stageRect = stage?.getBoundingClientRect();
@@ -450,7 +487,6 @@ function layoutWomanModelsFromSlots(group, camera, section) {
     group.children.forEach((model, index) => {
       model.position.x = startX + index * spacing;
       model.position.y = 0;
-      applyWomanModelLayoutScale(model);
     });
     return;
   }
@@ -459,21 +495,47 @@ function layoutWomanModelsFromSlots(group, camera, section) {
     const slot = slots[index];
     if (!slot) return;
 
-    const rect = slot.getBoundingClientRect();
-    const centerNorm =
-      (rect.left + rect.width / 2 - stageRect.left) / stageRect.width - 0.5;
+    const card = slot.querySelector('.woman-models-card');
+    const rect = (card ?? slot).getBoundingClientRect();
 
-    model.position.x = centerNorm * viewWidth;
-
-    if (isWomanModelsMobileLayout()) {
-      const row = Math.floor(index / 2);
-      model.position.y = (0.5 - row) * WOMAN_MODEL_MOBILE_ROW_GAP;
-    } else {
-      model.position.y = 0;
-    }
-
-    applyWomanModelLayoutScale(model);
+    layoutWomanModelXFromSlot(model, rect, stageRect, viewWidth);
+    model.position.y = 0;
   });
+}
+
+function layoutWomanModelsFromSlots(group, camera, section) {
+  const slots = section?.querySelectorAll('.woman-models-slot');
+  const stage = section?.querySelector('.woman-models-stage');
+  const stageRect = stage?.getBoundingClientRect();
+  const viewWidth = getWomanModelsViewportWidth(camera);
+  const viewHeight = getWomanModelsViewportHeight(camera);
+
+  if (!slots?.length || !stageRect?.width) {
+    const count = group.children.length;
+    const spacing = isWomanModelsMobileLayout()
+      ? WOMAN_MODEL_MOBILE_SPACING_X
+      : WOMAN_MODEL_SPACING;
+    const startX = -((count - 1) * spacing) / 2;
+
+    group.children.forEach((model, index) => {
+      model.position.x = startX + index * spacing;
+      model.position.y = 0;
+    });
+    return false;
+  }
+
+  group.children.forEach((model, index) => {
+    const slot = slots[index];
+    if (!slot) return;
+
+    const card = slot.querySelector('.woman-models-card');
+    const rect = (card ?? slot).getBoundingClientRect();
+
+    layoutWomanModelXFromSlot(model, rect, stageRect, viewWidth);
+    layoutWomanModelYFromSlot(model, rect, stageRect, viewHeight);
+  });
+
+  return true;
 }
 
 function centerWomanModelsGroupVertical(group) {
@@ -484,28 +546,39 @@ function centerWomanModelsGroupVertical(group) {
 
 function repositionWomanModelsGroup(group, camera, section) {
   group.position.set(0, 0, 0);
-  layoutWomanModelsFromSlots(group, camera, section);
+  const slotAligned = layoutWomanModelsFromSlots(group, camera, section);
+
+  if (slotAligned) {
+    group.position.x = 0;
+    group.position.y = 0;
+    return;
+  }
+
   centerWomanModelsGroupVertical(group);
 }
 
 function fitAndLayoutWomanModels(group, camera, section) {
-  repositionWomanModelsGroup(group, camera, section);
-  fitWomanModelsCamera(camera, group, camera.aspect, section);
-  repositionWomanModelsGroup(group, camera, section);
+  snapAllWomanModelLayoutScales(group.children);
+
+  group.position.set(0, 0, 0);
+  bootstrapWomanModelsLayout(group, camera, section);
+  fitWomanModelsCamera(camera, group, camera.aspect);
+
+  group.position.set(0, 0, 0);
+  layoutWomanModelsFromSlots(group, camera, section);
+  expandWomanModelsCameraForVerticalFit(camera, group);
+
+  group.position.set(0, 0, 0);
+  layoutWomanModelsFromSlots(group, camera, section);
 }
 
 function bindWomanModelInteractionState(model, baseRotationY) {
-  const baseScale = model.scale.x;
-
   model.userData.baseRotationY = baseRotationY;
   model.userData.targetRotationY = baseRotationY;
   model.userData.currentRotationY = baseRotationY;
   model.rotation.y = baseRotationY;
 
-  model.userData.baseScale = baseScale;
-  model.userData.targetScale = baseScale;
-  model.userData.currentScale = baseScale;
-  model.scale.setScalar(baseScale);
+  snapWomanModelLayoutScale(model);
 }
 
 function initWomanModelsCursorParallax(section, models, lightingRig, renderer) {
@@ -599,10 +672,8 @@ function initWomanModelsCursorParallax(section, models, lightingRig, renderer) {
       if (modelIndex === index) {
         model.userData.targetRotationY =
           model.userData.baseRotationY + normalized * 2 * WOMAN_MOUSE_YAW_MAX;
-        model.userData.targetScale = model.userData.baseScale * WOMAN_HOVER_SCALE_MULT;
       } else {
         model.userData.targetRotationY = model.userData.baseRotationY;
-        model.userData.targetScale = model.userData.baseScale;
       }
     });
   };
@@ -637,13 +708,8 @@ function womanModelsNeedInteractionTick(models) {
   return models.some((model) => {
     const currentRot = model.userData.currentRotationY ?? model.rotation.y;
     const targetRot = model.userData.targetRotationY ?? model.userData.baseRotationY ?? model.rotation.y;
-    const currentScale = model.userData.currentScale ?? model.scale.x;
-    const targetScale = model.userData.targetScale ?? model.userData.baseScale ?? model.scale.x;
 
-    return (
-      Math.abs(currentRot - targetRot) > 0.0004 ||
-      Math.abs(currentScale - targetScale) > 0.0002
-    );
+    return Math.abs(currentRot - targetRot) > 0.0004;
   });
 }
 
@@ -659,18 +725,6 @@ function tickWomanModelsInteraction(models) {
     } else {
       model.userData.currentRotationY = nextRot;
       model.rotation.y = nextRot;
-    }
-
-    const currentScale = model.userData.currentScale ?? model.scale.x;
-    const targetScale = model.userData.targetScale ?? model.userData.baseScale ?? model.scale.x;
-    const nextScale = currentScale + (targetScale - currentScale) * WOMAN_MOUSE_INTERACTION_SMOOTH;
-
-    if (Math.abs(nextScale - targetScale) < 0.0002) {
-      model.userData.currentScale = targetScale;
-      model.scale.setScalar(targetScale);
-    } else {
-      model.userData.currentScale = nextScale;
-      model.scale.setScalar(nextScale);
     }
   });
 }
@@ -720,7 +774,7 @@ function initWomanModelsCards(section, count) {
   section.insertBefore(slotsEl, stage || section.firstChild);
 }
 
-function initWomanModelsUI(section, models, lightingRig, renderer, refitLayout, onRenderNeeded) {
+function initWomanModelsUI(section, models, lightingRig, renderer, onRenderNeeded) {
   if (!section || !models.length || section.querySelector('.woman-models-ui')) {
     return null;
   }
@@ -803,13 +857,7 @@ function initWomanModelsUI(section, models, lightingRig, renderer, refitLayout, 
   };
 
   const applyFocusTargets = (index) => {
-    models.forEach((model, modelIndex) => {
-      if (modelIndex === index) {
-        model.userData.targetRotationY = model.userData.baseRotationY;
-        model.userData.targetScale = model.userData.baseScale * WOMAN_FOCUS_SCALE_MULT;
-        return;
-      }
-
+    models.forEach((model) => {
       model.userData.targetRotationY = model.userData.baseRotationY;
       model.userData.targetScale = model.userData.baseScale;
     });
@@ -837,36 +885,22 @@ function initWomanModelsUI(section, models, lightingRig, renderer, refitLayout, 
   const exitFocus = () => {
     if (focusedIndex < 0) return;
 
-    const previousIndex = focusedIndex;
     focusedIndex = -1;
 
     section.classList.remove('section-woman-models--focused');
     delete section.dataset.focusedIndex;
+    section.dataset.activeHoverIndex = '-1';
     panel.setAttribute('aria-hidden', 'true');
     setActiveColumn(-1);
     setModelsFocusVisibility(-1);
 
     models.forEach((model) => {
       setModelDisplay(model, 'wireframe');
+      snapWomanModelLayoutScale(model);
     });
-    models.forEach((model) => {
-      model.scale.setScalar(model.userData.baseScale);
-      model.userData.currentScale = model.userData.baseScale;
-    });
-    resetFocusTargets();
-    syncFocusLighting(-1);
-    refitLayout?.();
-  };
 
-  const snapFocusScalesForFit = (index) => {
-    models.forEach((model, modelIndex) => {
-      const target =
-        modelIndex === index
-          ? model.userData.baseScale * WOMAN_FOCUS_SCALE_MULT
-          : model.userData.baseScale;
-      model.scale.setScalar(target);
-      model.userData.currentScale = target;
-    });
+    syncFocusLighting(-1);
+    onRenderNeeded?.();
   };
 
   const enterFocus = (index) => {
@@ -874,6 +908,10 @@ function initWomanModelsUI(section, models, lightingRig, renderer, refitLayout, 
       exitFocus();
       return;
     }
+
+    section.dataset.activeHoverIndex = '-1';
+
+    snapAllWomanModelLayoutScales(models);
 
     focusedIndex = index;
     section.classList.add('section-woman-models--focused');
@@ -900,15 +938,8 @@ function initWomanModelsUI(section, models, lightingRig, renderer, refitLayout, 
       }
     });
     applyFocusTargets(index);
-    snapFocusScalesForFit(index);
     syncFocusLighting(index);
-    refitLayout?.();
     onRenderNeeded?.();
-    requestAnimationFrame(() => {
-      if (focusedIndex !== index) return;
-      snapFocusScalesForFit(index);
-      refitLayout?.();
-    });
   };
 
   columnsEl.addEventListener('click', (event) => {
@@ -967,24 +998,62 @@ function initWomanModelsUI(section, models, lightingRig, renderer, refitLayout, 
   };
 }
 
-function fitWomanModelsCamera(camera, group, aspect, section) {
-  const box = new THREE.Box3().setFromObject(group);
+function getWomanModelsGroupBox(group) {
+  const box = new THREE.Box3();
+
+  group.children.forEach((model) => {
+    const wasVisible = model.visible;
+    model.visible = true;
+    box.expandByObject(model);
+    model.visible = wasVisible;
+  });
+
+  if (box.isEmpty()) {
+    box.setFromObject(group);
+  }
+
+  return box;
+}
+
+function fitWomanModelsCamera(camera, group, aspect) {
+  const box = getWomanModelsGroupBox(group);
   const size = box.getSize(new THREE.Vector3());
-  const center = box.getCenter(new THREE.Vector3());
   const pad = isWomanModelsMobileLayout() ? 1.26 : WOMAN_MODEL_CAMERA_PADDING;
-  const focused = section?.classList.contains('section-woman-models--focused');
-  const heightPad = focused ? pad * 1.14 : pad;
 
   const vFov = (camera.fov * Math.PI) / 180;
   const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
 
-  const distForHeight = (size.y * 0.5 * heightPad) / Math.tan(vFov / 2);
+  const distForHeight = (size.y * 0.5 * pad) / Math.tan(vFov / 2);
   const distForWidth = (size.x * 0.5 * pad) / Math.tan(hFov / 2);
   const distance = Math.max(distForHeight, distForWidth, 4.2);
 
-  camera.position.set(center.x, center.y, center.z + distance);
-  camera.lookAt(center);
+  camera.position.set(0, 0, distance);
+  camera.lookAt(0, 0, 0);
   camera.updateProjectionMatrix();
+}
+
+function expandWomanModelsCameraForVerticalFit(camera, group) {
+  const box = getWomanModelsGroupBox(group);
+  if (box.isEmpty()) return;
+
+  const viewHeight = getWomanModelsViewportHeight(camera);
+  const margin = viewHeight * 0.05;
+  const halfView = viewHeight * 0.5;
+  const overflowTop = box.max.y - (halfView - margin);
+  const overflowBottom = -box.min.y - (halfView - margin);
+  const overflow = Math.max(overflowTop, overflowBottom, 0);
+
+  if (overflow <= 0) return;
+
+  const vFov = (camera.fov * Math.PI) / 180;
+  const requiredHalfHeight = Math.max(Math.abs(box.max.y), Math.abs(box.min.y)) * 1.06;
+  const newDistance = requiredHalfHeight / Math.tan(vFov / 2);
+
+  if (newDistance > camera.position.z) {
+    camera.position.z = newDistance;
+    camera.lookAt(0, 0, 0);
+    camera.updateProjectionMatrix();
+  }
 }
 
 function initWomanModelsStage() {
@@ -1006,12 +1075,13 @@ function initWomanModelsStage() {
 
   const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 200);
   const renderer = new THREE.WebGLRenderer({
-    antialias: false,
+    antialias: true,
     alpha: true,
     premultipliedAlpha: false,
     powerPreference: 'high-performance',
   });
-  renderer.setPixelRatio(1);
+  let activeModelsDpr = getWomanModelsPixelRatio();
+  renderer.setPixelRatio(activeModelsDpr);
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = WOMAN_LIGHTING_PRESETS.wireframe.exposure;
@@ -1029,6 +1099,8 @@ function initWomanModelsStage() {
   const resize = () => {
     const width = Math.max(stage.clientWidth, 1);
     const height = Math.max(stage.clientHeight, 1);
+    activeModelsDpr = getWomanModelsPixelRatio();
+    renderer.setPixelRatio(activeModelsDpr);
     renderer.setSize(width, height);
     camera.aspect = width / height;
     if (group.children.length) {
@@ -1068,13 +1140,7 @@ function initWomanModelsStage() {
 
       fitAndLayoutWomanModels(group, camera, section);
       initWomanModelsCursorParallax(section, models, lightingRig, renderer);
-      const refitLayout = () => {
-        if (group.children.length) {
-          fitAndLayoutWomanModels(group, camera, section);
-        }
-      };
-
-      initWomanModelsUI(section, models, lightingRig, renderer, refitLayout, startRenderLoop);
+      initWomanModelsUI(section, models, lightingRig, renderer, startRenderLoop);
       requestAnimationFrame(prewarmModelsGpu);
       if (section.dataset.modelsRenderActive === 'true') {
         startRenderLoop();
@@ -1084,17 +1150,8 @@ function initWomanModelsStage() {
       console.error('[Benini Squad] Falha ao carregar modelos femininos:', err);
     });
 
-  const FOCUSED_DPR = Math.min(window.devicePixelRatio, 1.5);
-  const BASE_DPR = 1;
-  let activeModelsDpr = BASE_DPR;
-  let modelsGpuReady = false;
-  let renderLoopActive = false;
-  let staticRenderFrame = 0;
-
-  const applyModelsRenderQuality = () => {
-    const focused = section.classList.contains('section-woman-models--focused');
-    const targetDpr = focused ? FOCUSED_DPR : BASE_DPR;
-
+  const applyModelsRendererSize = () => {
+    const targetDpr = getWomanModelsPixelRatio();
     if (Math.abs(targetDpr - activeModelsDpr) < 0.01) return;
 
     activeModelsDpr = targetDpr;
@@ -1104,18 +1161,29 @@ function initWomanModelsStage() {
     renderer.setSize(width, height);
   };
 
+  let modelsGpuReady = false;
+  let renderLoopActive = false;
+  let staticRenderFrame = 0;
+
   const isHeroVideoScrubActive = () =>
     typeof window.isHeroVideoScrubActive === 'function' && window.isHeroVideoScrubActive();
+
+  let prewarmDeferCount = 0;
 
   const prewarmModelsGpu = () => {
     if (!loadedModels.length) return;
     if (isHeroVideoScrubActive()) {
-      requestAnimationFrame(prewarmModelsGpu);
+      if (prewarmDeferCount < 120) {
+        prewarmDeferCount += 1;
+        requestAnimationFrame(prewarmModelsGpu);
+      }
       return;
     }
 
-    renderer.setPixelRatio(BASE_DPR);
-    activeModelsDpr = BASE_DPR;
+    prewarmDeferCount = 0;
+
+    activeModelsDpr = getWomanModelsPixelRatio();
+    renderer.setPixelRatio(activeModelsDpr);
     const width = Math.max(stage.clientWidth, 1);
     const height = Math.max(stage.clientHeight, 1);
     renderer.setSize(width, height);
@@ -1131,6 +1199,8 @@ function initWomanModelsStage() {
     renderer.render(scene, camera);
   };
 
+  let renderHeroDeferCount = 0;
+
   const renderFrame = () => {
     const sectionActive = section.dataset.modelsRenderActive === 'true';
     const focused = section.classList.contains('section-woman-models--focused');
@@ -1141,9 +1211,16 @@ function initWomanModelsStage() {
     }
 
     if (isHeroVideoScrubActive()) {
-      requestAnimationFrame(renderFrame);
+      if (renderHeroDeferCount < 120) {
+        renderHeroDeferCount += 1;
+        requestAnimationFrame(renderFrame);
+      } else {
+        renderLoopActive = false;
+      }
       return;
     }
+
+    renderHeroDeferCount = 0;
 
     const scrolling = window.__beniniIsScrolling === true;
     const hoverActive = Number(section.dataset.activeHoverIndex) >= 0;
@@ -1161,7 +1238,7 @@ function initWomanModelsStage() {
       staticRenderFrame = 0;
     }
 
-    applyModelsRenderQuality();
+    applyModelsRendererSize();
 
     if (!modelsGpuReady && loadedModels.length) {
       modelsGpuReady = true;

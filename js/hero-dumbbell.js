@@ -1,7 +1,7 @@
 'use strict';
 
 const DUMBBELL_MODEL_URL = 'models/3d/domyos_dumbbell.pages.glb';
-const DUMBBELL_FIT_SIZE = 2.975;
+const DUMBBELL_FIT_SIZE = 2.975 * 1.25;
 const DUMBBELL_SCALE_START_MULT = 0.918;
 const DUMBBELL_SCALE_END_MULT = 1.122;
 const DUMBBELL_BASE_ROTATION = { x: 0.15, y: Math.PI * 0.28, z: 0.05 };
