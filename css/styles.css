@@ -722,7 +722,6 @@ html.nav-menu-open {
 .nav-split-char {
   display: inline-block;
   line-height: 1;
-  will-change: transform, opacity;
 }
 
 .nav-brand-main,
@@ -769,9 +768,9 @@ html.nav-menu-open {
 .hero-bg {
   position: absolute;
   inset: 0;
-  background-image: url('../images/Hero-Benini2.webp');
-  background-size: cover;
-  background-position: center center;
+  background-image: url('../images/bg-benis-site.webp');
+  background-size: auto 100%;
+  background-position: right center;
   background-repeat: no-repeat;
 }
 
@@ -798,7 +797,7 @@ html.nav-menu-open {
 }
 
 /* GSAP pin: spacer e bloco pinado alinhados à largura da viewport */
-.pin-spacer:has(.hero-visual--video) {
+.pin-spacer.hero-video-pin-spacer {
   width: 100% !important;
   max-width: 100%;
   box-sizing: border-box;
@@ -825,6 +824,30 @@ html.nav-menu-open {
   overflow: hidden;
   background: var(--col-black);
   z-index: 2;
+}
+
+/* Overlap manifesto: transição de fade nos elementos 3D/WebGL antes de esconder */
+#hero-visual .hero-visual-grid-scan,
+#hero-visual .hero-visual-dumbbell,
+#hero-visual .hero-visual-benini,
+#hero-visual .hero-benini-text-aside,
+#hero-visual .hero-visual-blur-panel,
+#hero-visual .hero-visual-video-blur-vignette,
+#hero-visual .hero-visual-keyhole,
+#hero-visual .hero-visual-ambient-glows,
+#hero-visual .hero-visual-vignette {
+  transition: opacity 0.38s ease-out;
+}
+
+#hero-visual.is-overlap-cover-active .hero-visual-video-blur-vignette,
+#hero-visual.is-overlap-cover-active .hero-visual-keyhole {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+#hero-visual.is-overlap-cover-active .hero-visual-video {
+  filter: none !important;
+  will-change: auto;
 }
 
 .hero-visual.hero-visual--video::after {
@@ -944,7 +967,6 @@ html.nav-menu-open {
   filter: blur(calc(var(--hero-video-blur, 0) * 1px))
     brightness(var(--hero-video-brightness, 1))
     saturate(var(--hero-video-saturate, 1));
-  will-change: filter;
   pointer-events: none;
   display: block;
 }
@@ -987,7 +1009,11 @@ html.nav-menu-open {
   mask-repeat: no-repeat, no-repeat;
   -webkit-mask-composite: source-out;
   mask-composite: exclude;
-  will-change: mask-size, opacity;
+  will-change: opacity;
+}
+
+.hero-visual-keyhole.is-keyhole-scaling {
+  will-change: opacity, mask-size;
 }
 
 .hero-visual-video-blur-vignette {
@@ -1133,9 +1159,10 @@ html.nav-menu-open {
   --blueprint-line-a: 0.2;
   --blueprint-line-b: 0.13;
   --blueprint-layer-b: 0.92;
+  display: none;
   position: absolute;
   inset: 0;
-  z-index: 4;
+  z-index: 6;
   pointer-events: none;
   overflow: hidden;
 }
@@ -1145,13 +1172,13 @@ html.nav-menu-open {
   content: '';
   position: absolute;
   top: 46%;
-  left: 0;
+  right: 0;
   width: min(112vw, 1120px);
   height: min(92vh, 840px);
   transform: translate(0, -50%);
   background-size: 52px 52px;
   -webkit-mask-image: radial-gradient(
-    ellipse 88% 74% at 0% 50%,
+    ellipse 88% 74% at 100% 50%,
     #000 0%,
     #000 38%,
     rgba(0, 0, 0, 0.72) 56%,
@@ -1159,7 +1186,7 @@ html.nav-menu-open {
     transparent 92%
   );
   mask-image: radial-gradient(
-    ellipse 88% 74% at 0% 50%,
+    ellipse 88% 74% at 100% 50%,
     #000 0%,
     #000 38%,
     rgba(0, 0, 0, 0.72) 56%,
@@ -1198,18 +1225,11 @@ html.nav-menu-open {
 }
 
 .hero-visual-blueprint-grid--blur {
-  --blueprint-strength: 1;
-  --blueprint-line-a: 0.26;
-  --blueprint-line-b: 0.18;
-  --blueprint-layer-b: 0.95;
-  inset: auto;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: auto;
-  width: 74%;
-  z-index: 6;
-  opacity: 0;
+  display: none;
+}
+
+.hero-visual-blur-panel--left {
+  display: none;
 }
 
 .hero-visual-blueprint-grid--blur::before,
@@ -2029,9 +2049,15 @@ html.nav-menu-open {
 .section-manifesto.section-manifesto--overlap-ready {
   margin-top: calc(-1 * var(--hero-overlap-distance, 100svh));
   will-change: transform;
+  contain: layout style paint;
+  transform: translateZ(0);
 }
 
-body.is-hero-manifesto-overlap .pin-spacer:has(.hero-visual--video) {
+body.is-hero-manifesto-overlap #hero-visual-blur-panel {
+  pointer-events: none !important;
+}
+
+body.is-hero-manifesto-overlap .pin-spacer.hero-video-pin-spacer {
   z-index: 2;
 }
 
@@ -2611,10 +2637,19 @@ body.is-hero-manifesto-overlap #manifesto {
    MARQUEE STRIP
    ──────────────────────────────────────────────────── */
 .marquee-strip {
-  background: var(--col-gold);
+  --marquee-shift: 0px;
+  background: linear-gradient(
+    90deg,
+    #050506 0%,
+    #0b0a0c 25%,
+    #141215 50%,
+    #0b0a0c 75%,
+    #050506 100%
+  );
   overflow: hidden;
   padding: 14px 0;
   white-space: nowrap;
+  contain: paint;
 }
 
 .marquee-strip--divider {
@@ -2625,7 +2660,11 @@ body.is-hero-manifesto-overlap #manifesto {
 }
 .marquee-track {
   display: inline-flex;
+  width: max-content;
   animation: marquee-scroll 28s linear infinite;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 .marquee-item {
   font-family: var(--font-display);
@@ -2633,16 +2672,16 @@ body.is-hero-manifesto-overlap #manifesto {
   font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--col-dark);
+  color: var(--col-cream-mid);
   padding: 0 24px;
 }
 .marquee-item .sep {
-  color: rgba(58,51,52,0.4);
+  color: color-mix(in srgb, var(--col-cream-mid) 42%, transparent);
   margin-left: 24px;
 }
 @keyframes marquee-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(calc(-1 * var(--marquee-shift)), 0, 0); }
 }
 
 /* ────────────────────────────────────────────────────

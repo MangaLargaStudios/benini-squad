@@ -5,6 +5,10 @@ const BENINI_HOLD_SCROLL_VH = { mobile: 0.85, desktop: 1.15 };
 const HERO_ASIDE_TEXT_HOLD_VH = { mobile: 0.55, desktop: 0.72 };
 const HERO_OVERLAP_SCROLL_VH = { mobile: 1, desktop: 1 };
 const KEYHOLE_PIN_DELAY_RATIO = 0.22;
+const KEYHOLE_SCALE_RATIO = 0.58;
+const KEYHOLE_FADE_RATIO = 0.2;
+const KEYHOLE_SILHOUETTE_ASPECT = 304 / 166;
+const KEYHOLE_MASK_END_BLEED = 1.12;
 const KEYHOLE_SCROLL_RATIO = { mobile: 0.2, desktop: 0.24 };
 const BENINI_BLUR_MAX = { mobile: 5, desktop: 9 };
 
@@ -105,6 +109,11 @@ function setVideoBackdropFx(pin, eased) {
 
   const blurMax = isMobileViewport() ? BENINI_BLUR_MAX.mobile : BENINI_BLUR_MAX.desktop;
 
+  const video = pin.querySelector('.hero-visual-video');
+  if (video) {
+    video.style.willChange = eased > 0.02 ? 'filter' : 'auto';
+  }
+
   pin.style.setProperty('--hero-video-blur', String(eased * blurMax));
   pin.style.setProperty('--hero-video-brightness', String(1 - eased * 0.1));
   pin.style.setProperty('--hero-video-saturate', String(1 - eased * 0.04));
@@ -180,9 +189,67 @@ function getKeyholeScrollDistance(scrollDistance) {
   return vhCap;
 }
 
+function parseKeyholeMaskVmin(vminValue) {
+  const match = /^([\d.]+)vmin$/.exec(String(vminValue).trim());
+  if (!match) return 0;
+  const minDim = Math.min(window.innerWidth, window.innerHeight);
+  return (parseFloat(match[1]) / 100) * minDim;
+}
+
+/** Altura da silhueta (px) para cobrir 100% do container. */
+function getKeyholeMaskEndPx(pin) {
+  const el = pin || document.getElementById('hero-visual');
+  const w = el?.clientWidth || window.innerWidth;
+  const h = el?.clientHeight || window.innerHeight;
+  const heightForWidth = w / KEYHOLE_SILHOUETTE_ASPECT;
+
+  return Math.ceil(Math.max(h, heightForWidth) * KEYHOLE_MASK_END_BLEED);
+}
+
+function getKeyholeMaskMetrics(pin) {
+  const mobile = isMobileViewport();
+  const maskStartPx = parseKeyholeMaskVmin(mobile ? '40vmin' : '48vmin');
+  const maskEndPx = getKeyholeMaskEndPx(pin);
+
+  return {
+    maskStartPx,
+    maskEndPx: Math.max(maskEndPx, maskStartPx + 1),
+  };
+}
+
+function applyHeroKeyholeScrollState(keyhole, progress, metrics) {
+  const { maskStartPx, maskEndPx } = metrics;
+  const activeSpan = 1 - KEYHOLE_PIN_DELAY_RATIO;
+
+  if (progress <= KEYHOLE_PIN_DELAY_RATIO) {
+    keyhole.classList.add('is-keyhole-scaling');
+    keyhole.style.setProperty('--keyhole-mask-size', `${maskStartPx}px`);
+    keyhole.style.opacity = '1';
+    return;
+  }
+
+  const activeProgress = (progress - KEYHOLE_PIN_DELAY_RATIO) / activeSpan;
+  const scaleSpan = KEYHOLE_SCALE_RATIO / (KEYHOLE_SCALE_RATIO + KEYHOLE_FADE_RATIO);
+
+  if (activeProgress <= scaleSpan) {
+    keyhole.classList.add('is-keyhole-scaling');
+    const scaleT = activeProgress / scaleSpan;
+    const maskPx = maskStartPx + (maskEndPx - maskStartPx) * scaleT;
+    keyhole.style.setProperty('--keyhole-mask-size', `${maskPx}px`);
+    keyhole.style.opacity = '1';
+    return;
+  }
+
+  keyhole.classList.remove('is-keyhole-scaling');
+  keyhole.style.setProperty('--keyhole-mask-size', `${maskEndPx}px`);
+  const fadeT = Math.min(1, (activeProgress - scaleSpan) / (1 - scaleSpan));
+  keyhole.style.opacity = String(1 - fadeT);
+}
+
 function initHeroKeyholeReveal(wrap, scrollDistance) {
   const keyhole = document.getElementById('hero-visual-keyhole');
-  if (!keyhole || !wrap || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+  const pin = document.getElementById('hero-visual');
+  if (!keyhole || !wrap || !pin || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
     return;
   }
 
@@ -195,42 +262,27 @@ function initHeroKeyholeReveal(wrap, scrollDistance) {
   }
 
   const mobile = isMobileViewport();
-  const maskStart = mobile ? '40vmin' : '48vmin';
-  const maskEnd = mobile ? '54vmin' : '64vmin';
   const keyholeScrollPx = getKeyholeScrollDistance(scrollDistance);
+  let metrics = getKeyholeMaskMetrics(pin);
 
-  gsap.set(keyhole, { opacity: 1, '--keyhole-mask-size': maskStart });
+  gsap.set(keyhole, { opacity: 1 });
+  applyHeroKeyholeScrollState(keyhole, 0, metrics);
 
-  const tl = gsap.timeline({
-    scrollTrigger: heroScrollTriggerConfig({
+  ScrollTrigger.create(
+    heroScrollTriggerConfig({
       id: 'hero-keyhole-reveal',
       trigger: wrap,
       start: 'top top',
       end: `+=${keyholeScrollPx}`,
       scrub: mobile ? 1 : 1.25,
-    }),
-  });
-
-  tl.to({}, { duration: KEYHOLE_PIN_DELAY_RATIO, ease: 'none' });
-
-  tl.to(
-    keyhole,
-    {
-      '--keyhole-mask-size': maskEnd,
-      ease: 'none',
-      duration: 0.36,
-    },
-    '>'
-  );
-
-  tl.to(
-    keyhole,
-    {
-      opacity: 0,
-      ease: 'none',
-      duration: 0.26,
-    },
-    '>'
+      invalidateOnRefresh: true,
+      onRefresh() {
+        metrics = getKeyholeMaskMetrics(pin);
+      },
+      onUpdate(self) {
+        applyHeroKeyholeScrollState(keyhole, self.progress, metrics);
+      },
+    })
   );
 }
 
@@ -275,6 +327,9 @@ function initHeroScrollVideo() {
   const buildScrub = () => {
     if (heroVideoReducedMotion()) {
       if (scrubTrigger) scrubTrigger.kill();
+      if (typeof window.disposeHeroGridScan === 'function') {
+        window.disposeHeroGridScan();
+      }
       wrap.style.removeProperty('--hero-scroll-distance');
       video.currentTime = 0;
       const keyhole = document.getElementById('hero-visual-keyhole');
@@ -294,6 +349,10 @@ function initHeroScrollVideo() {
     lastBeniniRevealEased = -1;
 
     if (scrubTrigger) scrubTrigger.kill();
+
+    if (typeof window.disposeHeroGridScan === 'function') {
+      window.disposeHeroGridScan();
+    }
 
     if (typeof window.killHeroPhaseScrolls === 'function') {
       window.killHeroPhaseScrolls();
@@ -349,17 +408,40 @@ function initHeroScrollVideo() {
         end: `+=${scrollDistance}`,
         pin,
         pinSpacing: true,
-        pinReparent: true,
+        pinReparent: false,
         scrub: scrubSmooth,
-        anticipatePin: 1,
+        anticipatePin: 0,
         fastScrollEnd: isMobileViewport(),
+        onLeave: () => {
+          if (typeof window.setHeroOverlapCoverMode === 'function') {
+            window.setHeroOverlapCoverMode(false);
+          }
+        },
+        onEnterBack: () => {
+          if (typeof window.setHeroOverlapCoverMode === 'function') {
+            window.setHeroOverlapCoverMode(false);
+          }
+        },
         onUpdate: (self) => {
           if (video.readyState < 2) return;
 
+          const inOverlap =
+            typeof window.__beniniIsOverlapScrollProgress === 'function' &&
+            window.__beniniIsOverlapScrollProgress(self.progress);
+
+          if (inOverlap) {
+            if (typeof window.updateHeroGridScanVisibility === 'function') {
+              window.updateHeroGridScanVisibility(self.progress, video.currentTime, duration);
+            }
+            return;
+          }
+
           const target = mapScrollProgressToTime(self.progress, duration, mainRatio);
+          let videoSeeked = false;
 
           if (Math.abs(video.currentTime - target) > 0.035) {
             video.currentTime = target;
+            videoSeeked = true;
           }
 
           const beniniEased = getBeniniRevealFromTime(target, duration);
@@ -368,11 +450,30 @@ function initHeroScrollVideo() {
           if (typeof window.updateHeroDumbbell === 'function') {
             window.updateHeroDumbbell(beniniEased);
           }
+
+          if (typeof window.updateHeroGridScanVisibility === 'function') {
+            window.updateHeroGridScanVisibility(self.progress, target, duration);
+          }
         },
       })
     );
 
+    // Evita :has() no CSS (causa stutter perto do overlap).
+    // Marca o pin-spacer pra regras de largura/z-index.
+    if (scrubTrigger?.spacer) {
+      scrubTrigger.spacer.classList.add('hero-video-pin-spacer');
+    } else {
+      const maybeSpacer = pin.parentElement;
+      if (maybeSpacer?.classList?.contains('pin-spacer')) {
+        maybeSpacer.classList.add('hero-video-pin-spacer');
+      }
+    }
+
     initHeroKeyholeReveal(wrap, scrollDistance);
+
+    if (typeof window.initHeroGridScan === 'function') {
+      window.initHeroGridScan();
+    }
 
     ScrollTrigger.refresh();
 

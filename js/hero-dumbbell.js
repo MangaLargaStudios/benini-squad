@@ -119,12 +119,9 @@ function dumbbellScrollTriggerConfig(overrides = {}) {
   return config;
 }
 
+/** Apenas o painel direito (fase do haltere). Esquerdo e blueprint--blur ficam acima do GridScan. */
 function getHeroBlurLayers() {
-  return [
-    document.getElementById('hero-visual-blur-panel-left'),
-    document.getElementById('hero-visual-blur-panel'),
-    document.getElementById('hero-visual-blur-blueprint-grid'),
-  ].filter(Boolean);
+  return [document.getElementById('hero-visual-blur-panel')].filter(Boolean);
 }
 
 function killHeroPhaseScrolls() {
@@ -166,9 +163,34 @@ function killHeroPhaseScrolls() {
   }
 }
 
+function setHeroOverlapCoverMode(active) {
+  const heroVisual = document.getElementById('hero-visual');
+  if (heroVisual) {
+    heroVisual.classList.toggle('is-overlap-cover-active', active);
+  }
+}
+
+function isOverlapScrollProgress(progress) {
+  const start = window.__heroOverlapProgressStart;
+  const end = window.__heroOverlapProgressEnd;
+  if (typeof start !== 'number' || typeof end !== 'number') return false;
+  return progress >= start - 0.02 && progress <= end + 0.02;
+}
+
+function isHeroOverlapActive() {
+  if (document.body.classList.contains('is-hero-manifesto-overlap')) return true;
+  if (typeof ScrollTrigger === 'undefined') return false;
+  const progress = ScrollTrigger.getById('hero-video-scrub')?.progress;
+  return typeof progress === 'number' && isOverlapScrollProgress(progress);
+}
+
+window.__beniniIsOverlapScrollProgress = isOverlapScrollProgress;
+window.__beniniIsHeroOverlapActive = isHeroOverlapActive;
+
 function resetHeroManifestoOverlapLayout() {
   const manifesto = document.getElementById('manifesto');
   document.body.classList.remove('is-hero-manifesto-overlap');
+  setHeroOverlapCoverMode(false);
 
   if (!manifesto) {
     return;
@@ -214,22 +236,51 @@ function initHeroManifestoOverlapScroll(trigger, phases, scrub) {
     return;
   }
 
+  const setManifestoY = gsap.quickSetter(manifesto, 'y', 'px');
+
   gsap.set(manifesto, { y: overlapPx, force3D: true });
-  gsap.to(manifesto, {
-    y: 0,
-    ease: 'none',
-    immediateRender: false,
-    scrollTrigger: dumbbellScrollTriggerConfig({
+
+  ScrollTrigger.create(
+    dumbbellScrollTriggerConfig({
       id: 'hero-manifesto-overlap',
       trigger,
       ...phaseScrollRange(phases.overlap),
       scrub,
-      onEnter: () => document.body.classList.add('is-hero-manifesto-overlap'),
-      onEnterBack: () => document.body.classList.add('is-hero-manifesto-overlap'),
-      onLeave: () => document.body.classList.remove('is-hero-manifesto-overlap'),
-      onLeaveBack: () => document.body.classList.remove('is-hero-manifesto-overlap'),
-    }),
-  });
+      invalidateOnRefresh: false,
+      onUpdate(self) {
+        const y = overlapPx * (1 - self.progress);
+        setManifestoY(y);
+
+        if (self.progress > 0.01) {
+          document.body.classList.add('is-hero-manifesto-overlap');
+        } else if (self.direction < 0 && self.progress < 0.01) {
+          document.body.classList.remove('is-hero-manifesto-overlap');
+          setHeroOverlapCoverMode(false);
+        }
+
+        // Só esconde elementos 3D quando manifesto já cobre ~50% do hero
+        if (self.progress >= 0.5) {
+          setHeroOverlapCoverMode(true);
+        } else if (self.direction < 0 && self.progress < 0.35) {
+          setHeroOverlapCoverMode(false);
+        }
+      },
+      onEnter: () => {
+        document.body.classList.add('is-hero-manifesto-overlap');
+      },
+      onEnterBack: () => {
+        document.body.classList.add('is-hero-manifesto-overlap');
+        setHeroOverlapCoverMode(true);
+      },
+      onLeave: () => {
+        document.body.classList.remove('is-hero-manifesto-overlap');
+        setManifestoY(0);
+      },
+      onLeaveBack: () => {
+        document.body.classList.remove('is-hero-manifesto-overlap');
+      },
+    })
+  );
 }
 
 function phaseScrollRange(phase) {
@@ -285,7 +336,9 @@ function initHeroVideoPhaseScroll() {
 
   const phases = getHeroHoldPhases(metrics);
   const trigger = wrap;
-  const scrub = 1.5;
+  const scrub = true;
+  // Amortecimento suave exclusivo para as animações 3D do dumbbell
+  const dumbbellScrub = 0.85;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const heroVisual = document.getElementById('hero-visual');
@@ -335,12 +388,12 @@ function initHeroVideoPhaseScroll() {
       x: DUMBBELL_SCROLL_POSITION_END.x,
       y: DUMBBELL_SCROLL_POSITION_END.y,
       z: DUMBBELL_SCROLL_POSITION_END.z,
-      ease: 'none',
+      ease: 'power2.out',
       scrollTrigger: dumbbellScrollTriggerConfig({
         id: 'hero-phase-dumbbell-pos',
         trigger,
         ...range,
-        scrub,
+        scrub: dumbbellScrub,
       }),
     });
 
@@ -348,12 +401,12 @@ function initHeroVideoPhaseScroll() {
       x: DUMBBELL_SCROLL_ROTATION_END.x,
       y: DUMBBELL_SCROLL_ROTATION_END.y,
       z: DUMBBELL_SCROLL_ROTATION_END.z,
-      ease: 'none',
+      ease: 'power2.out',
       scrollTrigger: dumbbellScrollTriggerConfig({
         id: 'hero-phase-dumbbell-rot',
         trigger,
         ...range,
-        scrub,
+        scrub: dumbbellScrub,
       }),
     });
 
@@ -364,12 +417,12 @@ function initHeroVideoPhaseScroll() {
         x: scaleEnd,
         y: scaleEnd,
         z: scaleEnd,
-        ease: 'none',
+        ease: 'power2.out',
         scrollTrigger: dumbbellScrollTriggerConfig({
           id: 'hero-phase-dumbbell-scale',
           trigger,
           ...range,
-          scrub,
+          scrub: dumbbellScrub,
         }),
       }
     );
@@ -470,6 +523,11 @@ function initHeroVideoPhaseScroll() {
   }
 
   if (!reducedMotion) {
+    const scrollDistance = metrics.scrollDistance || 1;
+    window.__heroOverlapProgressStart = phases.overlap.startPx / scrollDistance;
+    window.__heroOverlapProgressEnd =
+      (phases.overlap.startPx + phases.overlap.lengthPx) / scrollDistance;
+
     initHeroManifestoOverlapScroll(trigger, phases, scrub);
 
     if (typeof window.initManifestoOverlapRevealScroll === 'function') {
@@ -653,17 +711,30 @@ function initDumbbellOrbit() {
     resizeObserver.observe(slot);
   }
 
+  let manifestoIntersecting = false;
+  const manifestoEl = document.getElementById('manifesto');
+  if (manifestoEl && typeof IntersectionObserver !== 'undefined') {
+    new IntersectionObserver(
+      (entries) => {
+        manifestoIntersecting = entries.some(
+          (e) => e.isIntersecting && e.boundingClientRect.top < window.innerHeight * 0.92
+        );
+      },
+      { threshold: 0, rootMargin: '0px 0px -8% 0px' }
+    ).observe(manifestoEl);
+  }
+
   function shouldRenderDumbbell() {
+    if (typeof window.__beniniIsHeroOverlapActive === 'function' && window.__beniniIsHeroOverlapActive()) {
+      return false;
+    }
+
     if (document.body.classList.contains('is-hero-manifesto-overlap')) {
       return false;
     }
 
-    const manifesto = document.getElementById('manifesto');
-    if (manifesto) {
-      const manifestoRect = manifesto.getBoundingClientRect();
-      if (manifestoRect.top < window.innerHeight * 0.92) {
-        return false;
-      }
+    if (manifestoIntersecting) {
+      return false;
     }
 
     if (typeof window.isHeroVideoScrubActive === 'function') {
@@ -700,7 +771,6 @@ function initHeroBlueprintGridParallax() {
   const section = document.getElementById('hero-visual');
   const grids = [
     document.querySelector('.hero-visual-blueprint-grid:not(.hero-visual-blueprint-grid--blur)'),
-    document.getElementById('hero-visual-blur-blueprint-grid'),
   ].filter(Boolean);
 
   if (
@@ -713,13 +783,18 @@ function initHeroBlueprintGridParallax() {
     return;
   }
 
+  const gridStyle = window.getComputedStyle(grids[0]);
+  if (gridStyle.display === 'none' || gridStyle.visibility === 'hidden') {
+    return;
+  }
+
   let targetX = 0;
   let targetY = 0;
   let currentX = 0;
   let currentY = 0;
 
-  const maxShift = window.matchMedia('(max-width: 768px)').matches ? 10 : 18;
-  const smooth = 0.11;
+  const maxShift = window.matchMedia('(max-width: 768px)').matches ? 3 : 6;
+  const smooth = 0.085;
 
   gsap.set(grids, { x: 0, y: 0, force3D: true });
 
@@ -758,12 +833,29 @@ function initHeroBlueprintGridParallax() {
   document.addEventListener('mousemove', onDocumentMove, { passive: true });
   section.addEventListener('mouseleave', resetTarget);
 
+  let blueprintSectionVisible = false;
+  if (typeof IntersectionObserver !== 'undefined') {
+    new IntersectionObserver(
+      (entries) => { blueprintSectionVisible = entries.some((e) => e.isIntersecting); },
+      { threshold: 0 }
+    ).observe(section);
+  } else {
+    blueprintSectionVisible = true;
+  }
+
   gsap.ticker.add(() => {
+    if (!blueprintSectionVisible) return;
+
+    const prevX = currentX;
+    const prevY = currentY;
+
     currentX += (targetX - currentX) * smooth;
     currentY += (targetY - currentY) * smooth;
 
     if (Math.abs(currentX) < 0.02 && Math.abs(targetX) < 0.02) currentX = 0;
     if (Math.abs(currentY) < 0.02 && Math.abs(targetY) < 0.02) currentY = 0;
+
+    if (Math.abs(currentX - prevX) < 0.01 && Math.abs(currentY - prevY) < 0.01) return;
 
     gsap.set(grids, { x: currentX, y: currentY, force3D: true });
   });
@@ -775,6 +867,7 @@ window.initDumbbellScroll = initDumbbellScroll;
 window.scheduleHeroPhaseScrollInit = scheduleHeroPhaseScrollInit;
 window.initHeroVideoPhaseScroll = initHeroVideoPhaseScroll;
 window.initHeroBlueprintGridParallax = initHeroBlueprintGridParallax;
+window.setHeroOverlapCoverMode = setHeroOverlapCoverMode;
 window.killHeroPhaseScrolls = killHeroPhaseScrolls;
 window.startOrbit = startOrbit;
 window.updateHeroDumbbell = () => {};

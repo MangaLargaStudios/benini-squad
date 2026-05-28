@@ -30,6 +30,8 @@
 <!-- Styles -->
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/color-bends.css">
+<link rel="stylesheet" href="css/grid-scan.css">
+<link rel="stylesheet" href="css/gradual-blur.css">
 <link rel="stylesheet" href="css/circular-text.css">
 </head>
 <body>
@@ -40,6 +42,9 @@
 <!-- Custom cursor -->
 <div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
 <div class="cursor-ring" id="cursor-ring" aria-hidden="true"></div>
+
+<!-- Gradual blur no topo (atrás do header) -->
+<div class="header-gradual-blur" id="header-gradual-blur" aria-hidden="true"></div>
 
 <!-- ═══════════════════════════════════
      NAV — floating glass bar (hero)
@@ -195,6 +200,11 @@
         <div class="hero-visual-keyhole" id="hero-visual-keyhole" aria-hidden="true"></div>
         <div class="hero-visual-video-blur-vignette" aria-hidden="true"></div>
       </div>
+      <div
+        class="hero-visual-grid-scan gridscan"
+        id="hero-visual-grid-scan"
+        aria-hidden="true"
+      ></div>
       <div class="hero-visual-ambient-glows" aria-hidden="true">
         <div class="hero-visual-ambient-glow hero-visual-ambient-glow--gold"></div>
         <div class="hero-visual-ambient-glow hero-visual-ambient-glow--amber"></div>
@@ -474,11 +484,15 @@
 
 <!-- JavaScript -->
 <script src="js/gltf-loader-setup.js"></script>
+<script src="js/grid-scan.js"></script>
+<script src="js/hero-grid-scan.js"></script>
 <script src="js/hero-video.js"></script>
 <script src="js/hero-dumbbell.js"></script>
 <script src="js/woman-models.js"></script>
 <script src="js/color-bends.js"></script>
 <script src="js/metodologia-color-bends.js"></script>
+<script src="js/gradual-blur.js"></script>
+<script src="js/header-gradual-blur.js"></script>
 <script src="js/circular-text.js"></script>
 <script src="js/app.js"></script>
 </body>
