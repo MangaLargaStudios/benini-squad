@@ -654,6 +654,18 @@ function initDumbbellOrbit() {
   }
 
   function shouldRenderDumbbell() {
+    if (document.body.classList.contains('is-hero-manifesto-overlap')) {
+      return false;
+    }
+
+    const manifesto = document.getElementById('manifesto');
+    if (manifesto) {
+      const manifestoRect = manifesto.getBoundingClientRect();
+      if (manifestoRect.top < window.innerHeight * 0.92) {
+        return false;
+      }
+    }
+
     if (typeof window.isHeroVideoScrubActive === 'function') {
       return window.isHeroVideoScrubActive();
     }
@@ -663,9 +675,18 @@ function initDumbbellOrbit() {
     return rect.bottom > 0 && rect.top < window.innerHeight;
   }
 
+  let dumbbellScrollFrame = 0;
+
   function render() {
     requestAnimationFrame(render);
     if (!shouldRenderDumbbell()) return;
+
+    if (window.__beniniIsScrolling) {
+      dumbbellScrollFrame += 1;
+      if (dumbbellScrollFrame % 2 !== 0) return;
+    } else {
+      dumbbellScrollFrame = 0;
+    }
 
     renderer.render(scene, camera);
   }

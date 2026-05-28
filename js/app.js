@@ -38,13 +38,15 @@ function initLenis() {
     clearTimeout(window.__beniniScrollIdleTimer);
     window.__beniniScrollIdleTimer = setTimeout(() => {
       window.__beniniIsScrolling = false;
+      if (typeof window.__beniniWomanModelsOnScrollIdle === 'function') {
+        window.__beniniWomanModelsOnScrollIdle();
+      }
     }, 220);
-
-    ScrollTrigger.update();
   });
 
   gsap.ticker.add((time) => {
     lenis.raf(time * 1000);
+    ScrollTrigger.update();
   });
   gsap.ticker.lagSmoothing(0);
 
@@ -651,7 +653,7 @@ function initMobileNavMenu(nav) {
 
     clearTimeout(closeTimer);
     toggle.setAttribute('aria-expanded', 'false');
-    toggle.setAttribute('aria-label', 'Abrir menu de navegação');
+    toggle.setAttribute('aria-label', 'Abrir menu de navegacao');
     menu.classList.remove('is-open');
     backdrop?.classList.remove('is-open');
     document.documentElement.classList.remove('nav-menu-open');
@@ -676,7 +678,7 @@ function initMobileNavMenu(nav) {
   const openMenu = () => {
     clearTimeout(closeTimer);
     toggle.setAttribute('aria-expanded', 'true');
-    toggle.setAttribute('aria-label', 'Fechar menu de navegação');
+    toggle.setAttribute('aria-label', 'Fechar menu de navegacao');
     menu.classList.remove('is-closing');
     backdrop?.classList.remove('is-closing');
     menu.removeAttribute('hidden');
@@ -1001,46 +1003,48 @@ function initManifestoOverlapRevealScroll(trigger, phases, scrub) {
   const { fades, words } = targets;
   setManifestoRevealHidden();
 
-  const tl = gsap.timeline({
-    scrollTrigger: scrollTriggerConfig({
+  const revealManifestoOverlapText = () => {
+    const tl = gsap.timeline({ defaults: { overwrite: 'auto' } });
+
+    if (fades.length) {
+      tl.to(
+        fades,
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.45,
+          ease: 'power2.out',
+          stagger: 0.04,
+        },
+        0
+      );
+    }
+
+    if (words.length) {
+      tl.to(
+        words,
+        splitTextShowOnScroll({
+          delay: MANIFESTO_SPLIT_TEXT_DELAY,
+          stagger: { each: MANIFESTO_SPLIT_TEXT_STAGGER, from: 'start' },
+        }),
+        fades.length ? MANIFESTO_SPLIT_TEXT_DELAY : 0
+      );
+    }
+  };
+
+  ScrollTrigger.create(
+    scrollTriggerConfig({
       id: 'manifesto-overlap-text',
       trigger,
       ...manifestoOverlapPhaseRange(phases.overlap),
-      scrub: scrub ?? 1.5,
-    }),
-  });
-
-  if (fades.length) {
-    tl.fromTo(
-      fades,
-      REVEAL_FADE_HIDDEN,
-      {
-        opacity: 1,
-        y: 0,
-        ease: 'none',
-        duration: 0.12,
-        stagger: { each: 0.03, from: 'start' },
+      onEnter: revealManifestoOverlapText,
+      onEnterBack: revealManifestoOverlapText,
+      onLeaveBack: () => {
+        gsap.killTweensOf([...fades, ...words]);
+        setManifestoRevealHidden();
       },
-      MANIFESTO_OVERLAP_TEXT_START
-    );
-  }
-
-  if (words.length) {
-    const wordsAt = MANIFESTO_OVERLAP_TEXT_START + MANIFESTO_SPLIT_TEXT_DELAY;
-
-    tl.fromTo(
-      words,
-      MANIFESTO_WORD_HIDDEN,
-      {
-        yPercent: 0,
-        opacity: 1,
-        ease: 'none',
-        duration: 0.48,
-        stagger: { each: MANIFESTO_SPLIT_TEXT_STAGGER, from: 'start' },
-      },
-      wordsAt
-    );
-  }
+    })
+  );
 }
 
 function registerManifestoViewportReveal() {

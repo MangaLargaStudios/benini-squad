@@ -60,10 +60,10 @@ const WOMAN_GLITCH_TO_WIREFRAME = [
 ];
 
 const WOMAN_PERSONA_COPY = [
-  { title: 'Persona 01', subtitle: 'Adicione um subtítulo para esta persona.' },
-  { title: 'Persona 02', subtitle: 'Adicione um subtítulo para esta persona.' },
-  { title: 'Persona 03', subtitle: 'Adicione um subtítulo para esta persona.' },
-  { title: 'Persona 04', subtitle: 'Adicione um subtítulo para esta persona.' },
+  { title: 'Persona 01', subtitle: 'Adicione um subtitulo para esta persona.' },
+  { title: 'Persona 02', subtitle: 'Adicione um subtitulo para esta persona.' },
+  { title: 'Persona 03', subtitle: 'Adicione um subtitulo para esta persona.' },
+  { title: 'Persona 04', subtitle: 'Adicione um subtitulo para esta persona.' },
 ];
 
 const WOMAN_MODEL_ROTATION_Y = {
@@ -1227,6 +1227,11 @@ function initWomanModelsStage() {
     const animating =
       focused || (!scrolling && hoverActive) || womanModelsNeedInteractionTick(loadedModels);
 
+    if (scrolling && !focused) {
+      requestAnimationFrame(renderFrame);
+      return;
+    }
+
     if (!animating) {
       staticRenderFrame += 1;
       const scrollThrottle = window.__beniniIsScrolling === true ? 2 : 4;
@@ -1264,6 +1269,20 @@ function initWomanModelsStage() {
 
   const stopRenderLoop = () => {
     renderLoopActive = false;
+  };
+
+  const renderWomanModelsFrame = () => {
+    if (!loadedModels.length) return;
+
+    applyModelsRendererSize();
+    tickWomanModelsLighting(lightingRig, renderer);
+    renderer.render(scene, camera);
+  };
+
+  window.__beniniWomanModelsOnScrollIdle = () => {
+    if (section.dataset.modelsRenderActive !== 'true') return;
+    staticRenderFrame = 0;
+    renderWomanModelsFrame();
   };
 
   section.dataset.modelsRenderActive = 'false';

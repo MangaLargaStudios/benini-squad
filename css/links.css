@@ -1,0 +1,113 @@
+/* Pagina /links — link-in-bio (mobile-first) */
+
+.links-page {
+  min-height: 100dvh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:
+    max(28px, env(safe-area-inset-top))
+    max(20px, env(safe-area-inset-right))
+    max(28px, env(safe-area-inset-bottom))
+    max(20px, env(safe-area-inset-left));
+  position: relative;
+  overflow: hidden;
+}
+
+.links-page__main {
+  position: relative;
+  z-index: var(--z-content);
+  width: min(100%, 400px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: clamp(32px, 8vh, 48px);
+}
+
+.links-page__header {
+  text-align: center;
+}
+
+.links-page__eyebrow {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: var(--text-sm);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--col-gold);
+  margin-bottom: 20px;
+}
+
+.links-page__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.65rem, 7.5vw, 2.25rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--col-cream);
+  margin-bottom: 14px;
+}
+
+.links-page__accent {
+  color: var(--col-gold);
+}
+
+.links-page__lead {
+  font-size: clamp(0.95rem, 3.5vw, 1.05rem);
+  color: rgba(238, 235, 221, 0.72);
+  line-height: 1.5;
+}
+
+.links-page__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.links-page__btn {
+  width: 100%;
+  justify-content: center;
+  min-height: 52px;
+  padding: 14px 22px;
+  border-radius: var(--radius-full);
+}
+
+.links-page__btn--site {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--col-cream);
+  border: 1px solid rgba(217, 159, 102, 0.35);
+  background: rgba(58, 51, 52, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition:
+    border-color var(--dur-mid) var(--ease-brand),
+    background var(--dur-mid) var(--ease-brand),
+    color var(--dur-mid) var(--ease-brand);
+}
+
+.links-page__btn--site:hover {
+  border-color: rgba(217, 159, 102, 0.65);
+  background: rgba(74, 66, 67, 0.75);
+  color: var(--col-gold-light);
+}
+
+.links-page__btn-arrow {
+  opacity: 0.85;
+}
+
+@media (min-width: 480px) {
+  .links-page__main {
+    width: min(100%, 420px);
+  }
+}

@@ -2117,7 +2117,18 @@ body.is-hero-manifesto-overlap #manifesto {
   background: var(--col-dark);
   position: relative;
   z-index: 1;
+  overflow: hidden;
 }
+
+.metodologia-content {
+  position: relative;
+  z-index: 1;
+}
+
+.section-metodologia .section-eyebrow {
+  transform: translateY(-25px);
+}
+
 .section-eyebrow {
   font-family: var(--font-display);
   font-weight: 300;
@@ -2674,6 +2685,7 @@ body.is-hero-manifesto-overlap #manifesto {
   position: relative;
   z-index: 4;
   margin: 0;
+  transform: translateY(-25px);
   padding: clamp(28px, 4.2vh, 48px) var(--layout-gutter) clamp(10px, 2vh, 18px);
   font-family: var(--font-display);
   font-weight: 700;

@@ -7,7 +7,7 @@ const outDir = path.join(root, 'dist');
 
 const CLOUDFLARE_MAX_FILE_BYTES = 25 * 1024 * 1024;
 
-const COPY_DIRS = ['css', 'js', 'images', 'videos', 'assets'];
+const COPY_DIRS = ['css', 'js', 'images', 'videos', 'assets', 'links'];
 
 const COPY_FILES = ['index.html'];
 
