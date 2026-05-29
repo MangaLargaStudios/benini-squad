@@ -113,7 +113,14 @@
       order = [...rest, front];
     };
 
-    const timerId = setInterval(swap, o.delay);
+    let visibilityPaused = false;
+    const visibilityObserver = new IntersectionObserver(
+      (entries) => { visibilityPaused = !entries[0].isIntersecting; },
+      { threshold: 0.01 }
+    );
+    visibilityObserver.observe(container);
+
+    const timerId = setInterval(() => { if (!visibilityPaused) swap(); }, o.delay);
 
     const resetCardScale = () => {
       gsap.to(cards, {
@@ -158,7 +165,7 @@
     }
 
     return {
-      destroy: () => clearInterval(timerId),
+      destroy: () => { clearInterval(timerId); visibilityObserver.disconnect(); },
       swap,
     };
   }

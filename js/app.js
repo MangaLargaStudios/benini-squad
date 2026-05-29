@@ -882,6 +882,11 @@ function showAllScrollRevealsImmediate() {
     opacity: 1,
     clearProps: 'transform',
   });
+  gsap.set('.app-feature-card', {
+    opacity: 1,
+    y: 0,
+    clearProps: 'transform',
+  });
 }
 
 function registerSectionScrollReveal(section, { setHidden, animateShow, animateHide }) {
@@ -1232,6 +1237,102 @@ window.killManifestoRevealScrolls = killManifestoRevealScrolls;
 window.setManifestoRevealHidden = setManifestoRevealHidden;
 window.registerManifestoViewportReveal = registerManifestoViewportReveal;
 
+function registerAppSectionReveal(section) {
+  if (!section) return;
+
+  const eyebrow = section.querySelector('.section-eyebrow');
+  const title = section.querySelector('.app-section-title');
+  const sub = section.querySelector('.app-section-sub');
+  const cta = section.querySelector('.app-text-col .btn-primary');
+  const cards = section.querySelectorAll('.app-feature-card');
+  const words = section.querySelectorAll('.app-feature-card .word');
+
+  registerSectionScrollReveal(section, {
+    setHidden: () => {
+      if (eyebrow) gsap.set(eyebrow, REVEAL_FADE_HIDDEN);
+      if (title) gsap.set(title, REVEAL_UP_HIDDEN);
+      if (sub) gsap.set(sub, REVEAL_FADE_HIDDEN);
+      if (cta) gsap.set(cta, REVEAL_FADE_HIDDEN);
+      if (cards.length) gsap.set(cards, { opacity: 0, y: 18 });
+      if (words.length) gsap.set(words, SPLIT_TEXT_HIDDEN);
+    },
+    animateShow: () => {
+      const tl = gsap.timeline({ defaults: { overwrite: 'auto' } });
+
+      if (eyebrow) {
+        tl.to(eyebrow, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 0);
+      }
+
+      if (title) {
+        tl.to(title, { opacity: 1, y: 0, ...REVEAL_SHOW }, 0.08);
+      }
+
+      if (sub) {
+        tl.to(sub, { opacity: 1, y: 0, duration: 0.55, ease: 'power2.out' }, 0.16);
+      }
+
+      if (cards.length) {
+        tl.to(
+          cards,
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.48,
+            ease: 'power2.out',
+            stagger: { each: 0.05, from: 'start' },
+          },
+          0.22
+        );
+      }
+
+      if (words.length) {
+        tl.to(
+          words,
+          splitTextShowOnScroll({
+            stagger: { each: SPLIT_TEXT_SHOW.stagger.each, from: 'start' },
+          }),
+          0.3
+        );
+      }
+
+      if (cta) {
+        tl.to(cta, { opacity: 1, y: 0, duration: 0.55, ease: 'power2.out' }, 0.52);
+      }
+    },
+    animateHide: () => {
+      const tl = gsap.timeline({ defaults: { overwrite: 'auto' } });
+
+      if (words.length) {
+        tl.to(
+          words,
+          splitTextHideOnScroll({ stagger: { each: SPLIT_TEXT_SHOW.stagger.each, from: 'end' } }),
+          0
+        );
+      }
+
+      if (cards.length) {
+        tl.to(cards, { opacity: 0, y: 18, duration: 0.35, ease: 'power2.inOut', stagger: 0.03 }, 0.04);
+      }
+
+      if (cta) {
+        tl.to(cta, { ...REVEAL_FADE_HIDDEN, duration: 0.35, ease: 'power2.inOut' }, 0.06);
+      }
+
+      if (sub) {
+        tl.to(sub, { ...REVEAL_FADE_HIDDEN, duration: 0.35, ease: 'power2.inOut' }, 0.08);
+      }
+
+      if (title) {
+        tl.to(title, { ...REVEAL_UP_HIDDEN, ...REVEAL_HIDE, stagger: 0.06 }, 0.1);
+      }
+
+      if (eyebrow) {
+        tl.to(eyebrow, { ...REVEAL_FADE_HIDDEN, duration: 0.35, ease: 'power2.inOut' }, 0.12);
+      }
+    },
+  });
+}
+
 function registerFeedbacksSectionReveal(section) {
   if (!section) return;
 
@@ -1245,7 +1346,7 @@ function registerFeedbacksSectionReveal(section) {
       if (eyebrow) gsap.set(eyebrow, REVEAL_FADE_HIDDEN);
       if (words.length) gsap.set(words, SPLIT_TEXT_HIDDEN);
       if (sub) gsap.set(sub, REVEAL_FADE_HIDDEN);
-      if (swapWrap) gsap.set(swapWrap, { opacity: 0, y: 24 });
+      if (swapWrap) gsap.set(swapWrap, { opacity: 0 });
     },
     animateShow: () => {
       const tl = gsap.timeline({ defaults: { overwrite: 'auto' } });
@@ -1267,24 +1368,17 @@ function registerFeedbacksSectionReveal(section) {
       }
 
       if (swapWrap) {
-        tl.to(swapWrap, { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, 0.28);
+        tl.to(swapWrap, { opacity: 1, duration: 0.7, ease: 'power3.out' }, 0.28);
       }
     },
     animateHide: () => {
-      const tl = gsap.timeline({ defaults: { overwrite: 'auto' } });
-
-      if (words.length) {
-        tl.to(words, splitTextHideOnScroll({ stagger: { each: SPLIT_TEXT_SHOW.stagger.each, from: 'end' } }), 0);
-      }
-      if (swapWrap) {
-        tl.to(swapWrap, { opacity: 0, y: 24, duration: 0.4, ease: 'power2.inOut' }, 0);
-      }
-      if (sub) {
-        tl.to(sub, { ...REVEAL_FADE_HIDDEN, duration: 0.35, ease: 'power2.inOut' }, 0.05);
-      }
-      if (eyebrow) {
-        tl.to(eyebrow, { ...REVEAL_FADE_HIDDEN, duration: 0.35, ease: 'power2.inOut' }, 0.1);
-      }
+      /* Instant hide — animateHide dispara enquanto hero-video já está scrubando;
+         qualquer tween GSAP aqui concorre com a leitura de video.currentTime. */
+      gsap.killTweensOf([eyebrow, ...words, sub, swapWrap].filter(Boolean));
+      if (eyebrow) gsap.set(eyebrow, REVEAL_FADE_HIDDEN);
+      if (words.length) gsap.set(words, SPLIT_TEXT_HIDDEN);
+      if (sub) gsap.set(sub, REVEAL_FADE_HIDDEN);
+      if (swapWrap) gsap.set(swapWrap, { opacity: 0 });
     },
   });
 }
@@ -1296,6 +1390,7 @@ function initScrollReveals() {
   }
 
   registerStandardSectionReveal(document.getElementById('transformacao'));
+  registerAppSectionReveal(document.getElementById('app'));
   registerFeedbacksSectionReveal(document.getElementById('feedbacks'));
   registerStandardSectionReveal(document.getElementById('cta'));
 }

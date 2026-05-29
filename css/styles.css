@@ -3695,8 +3695,85 @@ body.is-hero-manifesto-overlap #manifesto {
   font-size: clamp(14px, 1.4vw, 16px);
   color: rgba(238,235,221,0.6);
   line-height: 1.75;
-  max-width: 420px;
+  max-width: 520px;
+  margin-bottom: 28px;
+}
+
+.app-feature-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
   margin-bottom: 36px;
+}
+
+.app-feature-card {
+  background: var(--col-cream);
+  border: 1px solid rgba(217, 159, 102, 0.14);
+  border-radius: 16px;
+  padding: clamp(14px, 1.5vw, 17px) clamp(13px, 1.4vw, 16px);
+  min-height: 88px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 6px;
+  box-shadow:
+    0 4px 18px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  overflow: hidden;
+}
+
+.app-feature-card__title {
+  margin: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--col-dark);
+}
+
+.app-feature-card__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.14em;
+  max-width: 100%;
+  line-height: 1.15;
+  font-size: clamp(8.5px, 0.68vw, 10px);
+  letter-spacing: 0.02em;
+}
+
+.app-feature-card__title-row--num {
+  font-size: clamp(9px, 0.74vw, 10.5px);
+  letter-spacing: 0.05em;
+}
+
+.app-feature-card__body {
+  margin: 0;
+  width: 100%;
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: clamp(10.5px, 0.95vw, 12.5px);
+  line-height: 1.4;
+  color: rgba(58, 51, 52, 0.62);
+}
+
+.app-feature-card .word-wrap {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  margin: 0;
+  max-width: 100%;
+}
+
+.app-feature-card .word {
+  display: inline-block;
+  will-change: transform;
 }
 
 .app-features-list {
@@ -3724,6 +3801,12 @@ body.is-hero-manifesto-overlap #manifesto {
 }
 
 /* Mobile: stack vertically */
+@media (max-width: 1024px) {
+  .app-feature-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
   .app-inner {
     grid-template-columns: 1fr;
@@ -3744,10 +3827,8 @@ body.is-hero-manifesto-overlap #manifesto {
     text-align: center;
   }
 
-  .app-features-list {
-    align-items: flex-start;
-    text-align: left;
-    width: 100%;
+  .app-feature-cards {
+    grid-template-columns: 1fr;
     max-width: 340px;
   }
 }
@@ -3803,7 +3884,6 @@ body.is-hero-manifesto-overlap #manifesto {
 }
 .feedbacks-title .word {
   display: inline-block;
-  will-change: transform;
 }
 
 /* ── CardSwap wrapper ── */
@@ -3816,6 +3896,7 @@ body.is-hero-manifesto-overlap #manifesto {
   margin-top: 0;
   overflow: visible;
   position: relative;
+  contain: layout style;
 }
 
 /* Container perspectiva — ponto de referência do GSAP */
@@ -3845,6 +3926,7 @@ body.is-hero-manifesto-overlap #manifesto {
     0 8px 32px rgba(0, 0, 0, 0.45),
     0 2px 8px rgba(0, 0, 0, 0.25);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform, opacity;
 }
 
 .feedbacks-card-swap .card:hover {

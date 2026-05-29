@@ -10,6 +10,18 @@
     whatsappLink.href = `https://wa.me/${phone}?text=${message}`;
   }
 
+  const youtubeLink = document.getElementById('links-youtube');
+  const youtubeUrl = String(window.BENINI_YOUTUBE_URL || '').trim();
+  if (youtubeLink && youtubeUrl && youtubeUrl !== '#') {
+    youtubeLink.href = youtubeUrl;
+  }
+
+  const instagramLink = document.getElementById('links-instagram');
+  const instagramUrl = String(window.BENINI_INSTAGRAM_URL || '').trim();
+  if (instagramLink && instagramUrl && instagramUrl !== '#') {
+    instagramLink.href = instagramUrl;
+  }
+
   function showLinksContentImmediate() {
     document.querySelectorAll('.links-page__main [hidden]').forEach((el) => {
       el.hidden = false;
@@ -18,7 +30,7 @@
     if (typeof gsap === 'undefined') return;
 
     gsap.set(
-      '.links-split-char, .links-split-word, .links-page__btn, .btn-primary__icon, .links-page__btn-arrow',
+      '.links-split-char, .links-split-word, .links-page__btn, .btn-primary__icon, .links-page__btn-arrow, .btn-ghost__youtube-icon, .links-page__btn-instagram-icon',
       { opacity: 1, yPercent: 0, clearProps: 'transform' }
     );
   }
@@ -41,6 +53,29 @@
     });
   }
 
+  function addButtonEntrance(tl, { button, label, icon, at, onCompleteButtons }) {
+    if (!button) return;
+
+    const labelEl = label ? button.querySelector(label) : null;
+    const iconEl = icon ? button.querySelector(icon) : null;
+    const chars = labelEl ? [...labelEl.querySelectorAll('.links-split-char')] : [];
+
+    prepareButtonEntrance(button);
+    if (iconEl) gsap.set(iconEl, { opacity: 0 });
+
+    onCompleteButtons.push(button);
+
+    tl.to(button, { scale: 1, opacity: 1, duration: 0.72, ease: 'back.out(1.7)' }, at);
+
+    if (chars.length) {
+      tl.add(split.animateCharsShow(chars), at);
+    }
+
+    if (iconEl) {
+      tl.to(iconEl, { opacity: 0.9, duration: 0.45, ease: 'power2.out' }, at + 0.06);
+    }
+  }
+
   function playLinksPageEntrance() {
     if (!split || typeof gsap === 'undefined' || split.prefersReducedMotion()) {
       showLinksContentImmediate();
@@ -52,16 +87,22 @@
     const lead = document.querySelector('.links-page__lead');
     const whatsappBtn = document.getElementById('links-whatsapp');
     const siteBtn = document.getElementById('links-site');
-    const whatsappLabel = whatsappBtn?.querySelector('.btn-primary__label');
-    const siteLabel = siteBtn?.querySelector('.links-page__btn-label');
-    const whatsappIcon = whatsappBtn?.querySelector('.btn-primary__icon');
-    const siteArrow = siteBtn?.querySelector('.links-page__btn-arrow');
+    const youtubeBtn = document.getElementById('links-youtube');
+    const instagramBtn = document.getElementById('links-instagram');
 
     const eyebrowChars = split.splitIntoChars(eyebrow);
     const titleWords = split.splitIntoWords(title);
     const leadWords = split.splitIntoWords(lead);
+
+    const whatsappLabel = whatsappBtn?.querySelector('.btn-primary__label');
+    const siteLabel = siteBtn?.querySelector('.links-page__btn-label');
+    const youtubeLabel = youtubeBtn?.querySelector('.btn-ghost__label');
+    const instagramLabel = instagramBtn?.querySelector('.links-page__btn-label');
+
     const whatsappChars = split.splitIntoChars(whatsappLabel);
     const siteChars = split.splitIntoChars(siteLabel);
+    const youtubeChars = split.splitIntoChars(youtubeLabel);
+    const instagramChars = split.splitIntoChars(instagramLabel);
 
     split.setSplitHidden([
       ...eyebrowChars,
@@ -69,18 +110,15 @@
       ...leadWords,
       ...whatsappChars,
       ...siteChars,
+      ...youtubeChars,
+      ...instagramChars,
     ]);
 
-    prepareButtonEntrance(whatsappBtn);
-    prepareButtonEntrance(siteBtn);
-    if (whatsappIcon) gsap.set(whatsappIcon, { opacity: 0 });
-    if (siteArrow) gsap.set(siteArrow, { opacity: 0 });
-
+    const entranceButtons = [];
     const tl = gsap.timeline({
       defaults: { ease: 'power4.out' },
       onComplete: () => {
-        finishButtonEntrance(whatsappBtn);
-        finishButtonEntrance(siteBtn);
+        entranceButtons.forEach(finishButtonEntrance);
       },
     });
 
@@ -96,31 +134,34 @@
       tl.add(split.animateWordsShow(leadWords, { stagger: { each: 0.06, from: 'start' } }), 0.52);
     }
 
-    const whatsappAt = 0.72;
-    if (whatsappBtn) {
-      tl.to(
-        whatsappBtn,
-        { scale: 1, opacity: 1, duration: 0.72, ease: 'back.out(1.7)' },
-        whatsappAt
-      );
-    }
-    if (whatsappChars.length) {
-      tl.add(split.animateCharsShow(whatsappChars), whatsappAt);
-    }
-    if (whatsappIcon) {
-      tl.to(whatsappIcon, { opacity: 1, duration: 0.45, ease: 'power2.out' }, whatsappAt + 0.06);
-    }
-
-    const siteAt = 0.84;
-    if (siteBtn) {
-      tl.to(siteBtn, { scale: 1, opacity: 1, duration: 0.72, ease: 'back.out(1.7)' }, siteAt);
-    }
-    if (siteChars.length) {
-      tl.add(split.animateCharsShow(siteChars), siteAt);
-    }
-    if (siteArrow) {
-      tl.to(siteArrow, { opacity: 0.85, duration: 0.45, ease: 'power2.out' }, siteAt + 0.06);
-    }
+    addButtonEntrance(tl, {
+      button: whatsappBtn,
+      label: '.btn-primary__label',
+      icon: '.btn-primary__icon',
+      at: 0.72,
+      onCompleteButtons: entranceButtons,
+    });
+    addButtonEntrance(tl, {
+      button: siteBtn,
+      label: '.links-page__btn-label',
+      icon: '.links-page__btn-arrow',
+      at: 0.84,
+      onCompleteButtons: entranceButtons,
+    });
+    addButtonEntrance(tl, {
+      button: youtubeBtn,
+      label: '.btn-ghost__label',
+      icon: '.btn-ghost__youtube-icon',
+      at: 0.96,
+      onCompleteButtons: entranceButtons,
+    });
+    addButtonEntrance(tl, {
+      button: instagramBtn,
+      label: '.links-page__btn-label',
+      icon: '.links-page__btn-instagram-icon',
+      at: 1.08,
+      onCompleteButtons: entranceButtons,
+    });
   }
 
   function playRebrandNoticeEntrance() {
