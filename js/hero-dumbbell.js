@@ -80,10 +80,6 @@ function killHeroPhaseScrolls() {
   }
 
   resetHeroManifestoOverlapLayout();
-
-  if (typeof window.killManifestoRevealScrolls === 'function') {
-    window.killManifestoRevealScrolls();
-  }
 }
 
 function setHeroOverlapCoverMode(active) {
@@ -352,10 +348,6 @@ function initHeroVideoPhaseScroll() {
     window.__heroOverlapProgressStart = phases.overlap.startPx / scrollDistance;
     window.__heroOverlapProgressEnd =
       (phases.overlap.startPx + phases.overlap.lengthPx) / scrollDistance;
-  }
-
-  if (typeof window.registerManifestoViewportReveal === 'function') {
-    window.registerManifestoViewportReveal();
   }
 
   ScrollTrigger.refresh();

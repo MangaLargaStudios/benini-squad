@@ -107,6 +107,7 @@ const MANIFESTO_VIEWPORT_REVEAL_START = 'top 85%';
 const MANIFESTO_OVERLAP_TEXT_START = 0.3;
 const MANIFESTO_SPLIT_TEXT_DELAY = 0.13;
 const MANIFESTO_SPLIT_TEXT_STAGGER = 0.13;
+const MANIFESTO_ENTER_BACK_DELAY = 0.32;
 
 const SPLIT_TEXT_SHOW = {
   yPercent: 0,
@@ -137,6 +138,22 @@ function splitTextHideOnScroll(extra = {}) {
   return {
     ...SPLIT_TEXT_HIDE,
     ...extra,
+  };
+}
+
+function getManifestoSplitStagger(direction, mode) {
+  const forward = direction >= 0;
+
+  if (mode === 'show') {
+    return {
+      each: MANIFESTO_SPLIT_TEXT_STAGGER,
+      from: forward ? 'start' : 'end',
+    };
+  }
+
+  return {
+    each: MANIFESTO_SPLIT_TEXT_STAGGER,
+    from: forward ? 'end' : 'start',
   };
 }
 
@@ -860,7 +877,7 @@ function showAllScrollRevealsImmediate() {
     y: 0,
     clearProps: 'transform',
   });
-  gsap.set('.manifesto-headline .word', {
+  gsap.set('.word-wrap .word', {
     yPercent: 0,
     opacity: 1,
     clearProps: 'transform',
@@ -985,9 +1002,33 @@ function showManifestoRevealImmediate() {
 }
 
 let manifestoTextRevealed = false;
+let manifestoShowTimer = null;
+let manifestoRevealHandlers = null;
+
+function isManifestoSectionInView(section) {
+  if (!section) return false;
+
+  const rect = section.getBoundingClientRect();
+  const vh = window.innerHeight;
+
+  return rect.top < vh * 0.85 && rect.bottom > vh * 0.1;
+}
+
+function evaluateManifestoViewportReveal() {
+  if (manifestoTextRevealed || !manifestoRevealHandlers || prefersReducedMotion()) return;
+
+  const targets = getManifestoRevealTargets();
+  if (!targets || !isManifestoSectionInView(targets.section)) return;
+
+  const trigger = ScrollTrigger.getById('manifesto-section-reveal');
+  if (trigger?.isActive || isManifestoSectionInView(targets.section)) {
+    manifestoRevealHandlers.cancelScheduledShow();
+    manifestoRevealHandlers.animateShow(1);
+  }
+}
 
 function createManifestoRevealAnimations(targets) {
-  const { fades, words } = targets;
+  const { section, fades, words } = targets;
 
   const killTweens = () => {
     if (fades.length || words.length) {
@@ -995,10 +1036,28 @@ function createManifestoRevealAnimations(targets) {
     }
   };
 
-  const animateShow = () => {
+  const cancelScheduledShow = () => {
+    if (manifestoShowTimer) {
+      clearTimeout(manifestoShowTimer);
+      manifestoShowTimer = null;
+    }
+  };
+
+  const resetForReentry = () => {
+    cancelScheduledShow();
+    manifestoTextRevealed = false;
+    killTweens();
+    setManifestoRevealHidden();
+  };
+
+  const animateShow = (direction = 1) => {
     if (manifestoTextRevealed) return;
     manifestoTextRevealed = true;
+    cancelScheduledShow();
     killTweens();
+
+    if (fades.length) gsap.set(fades, REVEAL_FADE_HIDDEN);
+    if (words.length) gsap.set(words, MANIFESTO_WORD_HIDDEN);
 
     const tl = gsap.timeline({ defaults: { overwrite: 'auto' } });
 
@@ -1021,25 +1080,50 @@ function createManifestoRevealAnimations(targets) {
         words,
         splitTextShowOnScroll({
           delay: MANIFESTO_SPLIT_TEXT_DELAY,
-          stagger: { each: MANIFESTO_SPLIT_TEXT_STAGGER, from: 'start' },
+          stagger: getManifestoSplitStagger(direction, 'show'),
         }),
         fades.length ? MANIFESTO_SPLIT_TEXT_DELAY : 0
       );
     }
   };
 
-  const animateHide = () => {
+  const scheduleShow = (direction = 1, delaySec = MANIFESTO_ENTER_BACK_DELAY) => {
+    cancelScheduledShow();
+
+    const tryShow = (attempt = 0) => {
+      manifestoShowTimer = null;
+      if (manifestoTextRevealed) return;
+
+      if (!isManifestoSectionInView(section) && attempt < 10) {
+        manifestoShowTimer = setTimeout(() => tryShow(attempt + 1), 120);
+        return;
+      }
+
+      killTweens();
+      setManifestoRevealHidden();
+      manifestoTextRevealed = false;
+      animateShow(direction);
+    };
+
+    manifestoShowTimer = setTimeout(() => tryShow(0), Math.max(0, delaySec * 1000));
+  };
+
+  const animateHide = (direction = -1) => {
     if (!manifestoTextRevealed) return;
     manifestoTextRevealed = false;
+    cancelScheduledShow();
     killTweens();
 
-    const tl = gsap.timeline({ defaults: { overwrite: 'auto' } });
+    const tl = gsap.timeline({
+      defaults: { overwrite: 'auto' },
+      onComplete: () => setManifestoRevealHidden(),
+    });
 
     if (words.length) {
       tl.to(
         words,
         splitTextHideOnScroll({
-          stagger: { each: MANIFESTO_SPLIT_TEXT_STAGGER, from: 'end' },
+          stagger: getManifestoSplitStagger(direction, 'hide'),
         }),
         0
       );
@@ -1050,7 +1134,7 @@ function createManifestoRevealAnimations(targets) {
     }
   };
 
-  return { animateShow, animateHide, killTweens };
+  return { animateShow, animateHide, scheduleShow, resetForReentry, cancelScheduledShow, killTweens };
 }
 
 function registerManifestoSectionScrollReveal(handlers, { viewportReveal = true } = {}) {
@@ -1062,12 +1146,19 @@ function registerManifestoSectionScrollReveal(handlers, { viewportReveal = true 
     trigger: targets.section,
     start: MANIFESTO_VIEWPORT_REVEAL_START,
     end: 'bottom top',
-    onLeaveBack: () => handlers.animateHide(),
+    onLeaveBack: (self) => handlers.animateHide(self.direction),
   };
 
   if (viewportReveal) {
-    config.onEnter = () => handlers.animateShow();
-    config.onEnterBack = () => handlers.animateShow();
+    config.onEnter = (self) => {
+      handlers.cancelScheduledShow();
+      handlers.animateShow(self.direction);
+    };
+    config.onEnterBack = (self) => {
+      handlers.cancelScheduledShow();
+      if (manifestoTextRevealed) return;
+      handlers.scheduleShow(self.direction, MANIFESTO_ENTER_BACK_DELAY);
+    };
   }
 
   ScrollTrigger.create(scrollTriggerConfig(config));
@@ -1076,9 +1167,15 @@ function registerManifestoSectionScrollReveal(handlers, { viewportReveal = true 
 function killManifestoRevealScrolls() {
   if (typeof ScrollTrigger === 'undefined') return;
 
+  if (manifestoShowTimer) {
+    clearTimeout(manifestoShowTimer);
+    manifestoShowTimer = null;
+  }
+
   ScrollTrigger.getById('manifesto-section-reveal')?.kill();
   ScrollTrigger.getById('manifesto-overlap-text')?.kill();
   manifestoTextRevealed = false;
+  manifestoRevealHandlers = null;
   setManifestoRevealHidden();
 }
 
@@ -1100,23 +1197,21 @@ function registerManifestoViewportReveal() {
 
   killManifestoRevealScrolls();
   setManifestoRevealHidden();
-  manifestoTextRevealed = false;
 
-  const handlers = createManifestoRevealAnimations(targets);
-  registerManifestoSectionScrollReveal(handlers, { viewportReveal: true });
+  manifestoRevealHandlers = createManifestoRevealAnimations(targets);
+  registerManifestoSectionScrollReveal(manifestoRevealHandlers, { viewportReveal: true });
+
+  if (!window.__manifestoRevealRefreshBound) {
+    window.__manifestoRevealRefreshBound = true;
+    ScrollTrigger.addEventListener('refresh', () => {
+      requestAnimationFrame(evaluateManifestoViewportReveal);
+    });
+  }
 
   ScrollTrigger.refresh();
 
   requestAnimationFrame(() => {
-    if (manifestoTextRevealed) return;
-
-    const rect = targets.section.getBoundingClientRect();
-    const vh = window.innerHeight;
-    const inView = rect.top < vh * 0.85 && rect.bottom > vh * 0.08;
-
-    if (inView) {
-      handlers.animateShow();
-    }
+    evaluateManifestoViewportReveal();
   });
 }
 
@@ -1137,14 +1232,71 @@ window.killManifestoRevealScrolls = killManifestoRevealScrolls;
 window.setManifestoRevealHidden = setManifestoRevealHidden;
 window.registerManifestoViewportReveal = registerManifestoViewportReveal;
 
+function registerFeedbacksSectionReveal(section) {
+  if (!section) return;
+
+  const eyebrow = section.querySelector('.section-eyebrow');
+  const words = section.querySelectorAll('.word-wrap .word');
+  const sub = section.querySelector('.feedbacks-sub');
+  const swapWrap = section.querySelector('.feedbacks-swap-wrap');
+
+  registerSectionScrollReveal(section, {
+    setHidden: () => {
+      if (eyebrow) gsap.set(eyebrow, REVEAL_FADE_HIDDEN);
+      if (words.length) gsap.set(words, SPLIT_TEXT_HIDDEN);
+      if (sub) gsap.set(sub, REVEAL_FADE_HIDDEN);
+      if (swapWrap) gsap.set(swapWrap, { opacity: 0, y: 24 });
+    },
+    animateShow: () => {
+      const tl = gsap.timeline({ defaults: { overwrite: 'auto' } });
+
+      if (eyebrow) {
+        tl.to(eyebrow, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 0);
+      }
+
+      if (words.length) {
+        tl.to(
+          words,
+          splitTextShowOnScroll({ stagger: { each: SPLIT_TEXT_SHOW.stagger.each, from: 'start' } }),
+          0.1
+        );
+      }
+
+      if (sub) {
+        tl.to(sub, { opacity: 1, y: 0, duration: 0.55, ease: 'power2.out' }, 0.4);
+      }
+
+      if (swapWrap) {
+        tl.to(swapWrap, { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, 0.28);
+      }
+    },
+    animateHide: () => {
+      const tl = gsap.timeline({ defaults: { overwrite: 'auto' } });
+
+      if (words.length) {
+        tl.to(words, splitTextHideOnScroll({ stagger: { each: SPLIT_TEXT_SHOW.stagger.each, from: 'end' } }), 0);
+      }
+      if (swapWrap) {
+        tl.to(swapWrap, { opacity: 0, y: 24, duration: 0.4, ease: 'power2.inOut' }, 0);
+      }
+      if (sub) {
+        tl.to(sub, { ...REVEAL_FADE_HIDDEN, duration: 0.35, ease: 'power2.inOut' }, 0.05);
+      }
+      if (eyebrow) {
+        tl.to(eyebrow, { ...REVEAL_FADE_HIDDEN, duration: 0.35, ease: 'power2.inOut' }, 0.1);
+      }
+    },
+  });
+}
+
 function initScrollReveals() {
   if (prefersReducedMotion()) {
     showAllScrollRevealsImmediate();
     return;
   }
 
-  registerManifestoSectionReveal();
   registerStandardSectionReveal(document.getElementById('transformacao'));
+  registerFeedbacksSectionReveal(document.getElementById('feedbacks'));
   registerStandardSectionReveal(document.getElementById('cta'));
 }
 
@@ -1280,6 +1432,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.initMetodologiaScrollStack();
   }
 
+  registerManifestoSectionReveal();
   ScrollTrigger.refresh();
+  requestAnimationFrame(evaluateManifestoViewportReveal);
 });
 
