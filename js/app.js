@@ -77,6 +77,7 @@ function initLenis() {
   });
 
   window.beniniUsesLenisScroller = true;
+  window.beniniLenis = lenis;
 }
 
 function scrollTriggerConfig(overrides = {}) {
@@ -1088,39 +1089,9 @@ function manifestoOverlapPhaseRange(phase) {
   };
 }
 
-/** Split text e fades sincronizados ao scroll do overlap (manifesto sobe sobre o vídeo). */
-function initManifestoOverlapRevealScroll(trigger, phases, scrub) {
-  const targets = getManifestoRevealTargets();
-  if (!targets || !phases?.overlap?.lengthPx) {
-    return;
-  }
-
-  killManifestoRevealScrolls();
-
-  if (prefersReducedMotion()) {
-    showManifestoRevealImmediate();
-    return;
-  }
-
-  setManifestoRevealHidden();
-  manifestoTextRevealed = false;
-
-  const handlers = createManifestoRevealAnimations(targets);
-  registerManifestoSectionScrollReveal(handlers, { viewportReveal: false });
-
-  const overlapRevealStartPx = phases.overlap.startPx + phases.overlap.lengthPx;
-
-  ScrollTrigger.create(
-    scrollTriggerConfig({
-      id: 'manifesto-overlap-text',
-      trigger,
-      start: `top+=${overlapRevealStartPx} top`,
-      end: '+=120',
-      onEnter: () => handlers.animateShow(),
-      onEnterBack: () => handlers.animateShow(),
-      onLeaveBack: () => handlers.animateHide(),
-    })
-  );
+/** @deprecated Manifesto usa reveal por viewport; mantido por compatibilidade. */
+function initManifestoOverlapRevealScroll() {
+  registerManifestoViewportReveal();
 }
 
 function registerManifestoViewportReveal() {
@@ -1133,6 +1104,20 @@ function registerManifestoViewportReveal() {
 
   const handlers = createManifestoRevealAnimations(targets);
   registerManifestoSectionScrollReveal(handlers, { viewportReveal: true });
+
+  ScrollTrigger.refresh();
+
+  requestAnimationFrame(() => {
+    if (manifestoTextRevealed) return;
+
+    const rect = targets.section.getBoundingClientRect();
+    const vh = window.innerHeight;
+    const inView = rect.top < vh * 0.85 && rect.bottom > vh * 0.08;
+
+    if (inView) {
+      handlers.animateShow();
+    }
+  });
 }
 
 function registerManifestoSectionReveal() {
@@ -1144,12 +1129,7 @@ function registerManifestoSectionReveal() {
     return;
   }
 
-  setManifestoRevealHidden();
-  manifestoTextRevealed = false;
-
-  if (!window.__heroVideoScrollMetrics?.overlapScroll) {
-    registerManifestoViewportReveal();
-  }
+  registerManifestoViewportReveal();
 }
 
 window.initManifestoOverlapRevealScroll = initManifestoOverlapRevealScroll;
@@ -1164,7 +1144,6 @@ function initScrollReveals() {
   }
 
   registerManifestoSectionReveal();
-  registerStandardSectionReveal(document.getElementById('metodologia'));
   registerStandardSectionReveal(document.getElementById('transformacao'));
   registerStandardSectionReveal(document.getElementById('cta'));
 }
@@ -1286,14 +1265,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.initHeroBlueprintGridParallax();
   }
 
-  if (typeof window.initDumbbellOrbit === 'function') {
-    try {
-      window.initDumbbellOrbit();
-    } catch (err) {
-      console.error('[Benini Squad] Falha ao iniciar dumbbell 3D:', err);
-    }
-  }
-
   if (typeof window.initWomanModelsStage === 'function') {
     try {
       window.initWomanModelsStage();
@@ -1304,6 +1275,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initScrollReveals();
   initScrollRevealEngine();
+
+  if (typeof window.initMetodologiaScrollStack === 'function') {
+    window.initMetodologiaScrollStack();
+  }
 
   ScrollTrigger.refresh();
 });

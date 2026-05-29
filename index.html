@@ -32,7 +32,7 @@
 <link rel="stylesheet" href="css/color-bends.css">
 <link rel="stylesheet" href="css/grid-scan.css">
 <link rel="stylesheet" href="css/gradual-blur.css">
-<link rel="stylesheet" href="css/circular-text.css">
+<link rel="stylesheet" href="css/scroll-stack.css">
 </head>
 <body>
 
@@ -109,7 +109,7 @@
 <div class="nav-mobile-backdrop" id="nav-mobile-backdrop" aria-hidden="true" hidden></div>
 
 <!-- ═══════════════════════════════════
-     HERO
+     1. HERO
      ═══════════════════════════════════ -->
 <section class="hero" id="hero" aria-label="Hero — Benini Squad">
 
@@ -161,12 +161,20 @@
         <span class="btn-primary__label">Quero comecar</span>
         <span class="btn-primary__icon" aria-hidden="true">→</span>
       </a>
-      <a href="#metodologia" class="btn-ghost">Ver metodo</a>
+      <a href="#" class="btn-ghost btn-ghost--channel" target="_blank" rel="noopener noreferrer">
+        <span class="btn-ghost__label">Canal Benini Squad</span>
+        <span class="btn-ghost__youtube-icon" aria-hidden="true">
+          <svg viewBox="0 0 28 20" width="28" height="20" xmlns="http://www.w3.org/2000/svg" focusable="false">
+            <rect width="28" height="20" rx="5" fill="#FF0000"/>
+            <path d="M11.2 6v8l7.2-4z" fill="#FFFFFF"/>
+          </svg>
+        </span>
+      </a>
     </div>
     </div>
   </div>
 
-  <!-- Letreiro — divisória hero / vídeo -->
+  <!-- Letreiro — divisória hero / conteúdo -->
   <div class="marquee-strip marquee-strip--divider" aria-hidden="true">
     <div class="marquee-track">
       <span class="marquee-item">Forca Feminina <span class="sep">✦</span></span>
@@ -184,7 +192,227 @@
     </div>
   </div>
 
-  <!-- Segunda sessão — vídeo scrub no scroll -->
+</section>
+
+<!-- ═══════════════════════════════════
+     2. RESULTADOS / TRANSFORMAÇÕES
+     ═══════════════════════════════════ -->
+<section class="section-transformacao" id="transformacao" aria-label="Transformacoes">
+  <p class="section-eyebrow reveal-fade">Resultados</p>
+  <h2 class="section-title reveal-up">Elas chegaram como alunas.<br>Sairam como referencia.</h2>
+
+  <div class="transform-grid-wrap">
+    <div id="transform-circular-text" class="transform-circular-text-mount"></div>
+    <div class="transform-grid reveal-up">
+    <div class="transform-item">
+      <div class="parallax-img" style="background-image:linear-gradient(135deg,#5a4a3a,#3a2a2a); position:absolute; inset:0; width:100%; height:100%;"></div>
+      <div class="transform-overlay"></div>
+      <div class="transform-info">
+        <p class="transform-name">Ana Carolina</p>
+        <p class="transform-result">−12kg · 8 meses</p>
+      </div>
+    </div>
+    <div class="transform-item">
+      <div class="parallax-img" style="background-image:linear-gradient(135deg,#4a3a2a,#2a1a1a); position:absolute; inset:0; width:100%; height:100%;"></div>
+      <div class="transform-overlay"></div>
+      <div class="transform-info">
+        <p class="transform-name">Mariana Silva</p>
+        <p class="transform-result">Hipertrofia · 6 meses</p>
+      </div>
+    </div>
+    <div class="transform-item">
+      <div class="parallax-img" style="background-image:linear-gradient(135deg,#3a2a4a,#1a1a2a); position:absolute; inset:0; width:100%; height:100%;"></div>
+      <div class="transform-overlay"></div>
+      <div class="transform-info">
+        <p class="transform-name">Leticia Ramos</p>
+        <p class="transform-result">Recomposicao · 4 meses</p>
+      </div>
+    </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     3. METODOLOGIA
+     ═══════════════════════════════════ -->
+<section class="section-metodologia" id="metodologia" aria-label="Metodologia Benini Squad">
+  <div
+    class="metodologia-color-bends color-bends-container"
+    id="metodologia-color-bends"
+    aria-hidden="true"
+  ></div>
+  <div class="metodologia-layout">
+    <div class="metodologia-copy">
+      <p class="section-eyebrow">Metodologia</p>
+      <div class="metodologia-copy-slides" aria-live="polite">
+        <article class="metodologia-copy-slide is-active" data-index="0" aria-hidden="false">
+          <h2 class="metodologia-copy-title">Protocolo<br>Cientifico</h2>
+          <p class="metodologia-copy-desc">Cada protocolo e construido sobre fisiologia do exercicio feminino. Periodizacao inteligente que respeita o ciclo hormonal e maximiza resultados.</p>
+        </article>
+        <article class="metodologia-copy-slide" data-index="1" aria-hidden="true">
+          <h2 class="metodologia-copy-title">Precisao<br>Individual</h2>
+          <p class="metodologia-copy-desc">Nenhum corpo e igual. Anamnese completa, mapeamento de padroes e ajuste continuo — seu protocolo evolui com voce, semana a semana.</p>
+        </article>
+        <article class="metodologia-copy-slide" data-index="2" aria-hidden="true">
+          <h2 class="metodologia-copy-title">Mentalidade<br>Elite</h2>
+          <p class="metodologia-copy-desc">O treino fisico e 40% do resultado. Os outros 60% sao mindset, consistencia e o ambiente certo. A Squad oferece os tres.</p>
+        </article>
+        <article class="metodologia-copy-slide" data-index="3" aria-hidden="true">
+          <h2 class="metodologia-copy-title">Acompanhamento<br>Premium</h2>
+          <p class="metodologia-copy-desc">Acesso direto a Benini. Revisoes semanais, ajustes em tempo real, comunidade exclusiva. Voce nunca treina sozinha.</p>
+        </article>
+      </div>
+    </div>
+
+    <div class="metodologia-stack-col">
+      <div class="scroll-stack-host" id="metodologia-scroll-stack">
+
+        <div class="scroll-stack-card metodo-card" data-card="0">
+          <span class="card-number" aria-hidden="true">01</span>
+          <div class="card-icon" aria-hidden="true">⚡</div>
+          <h3 class="card-title">Protocolo Cientifico</h3>
+          <p class="card-desc">Cada protocolo e construido sobre fisiologia do exercicio feminino. Periodizacao inteligente que respeita o ciclo hormonal e maximiza resultados.</p>
+          <div class="card-line"></div>
+        </div>
+
+        <div class="scroll-stack-card metodo-card" data-card="1">
+          <span class="card-number" aria-hidden="true">02</span>
+          <div class="card-icon" aria-hidden="true">🎯</div>
+          <h3 class="card-title">Precisao Individual</h3>
+          <p class="card-desc">Nenhum corpo e igual. Anamnese completa, mapeamento de padroes e ajuste continuo — seu protocolo evolui com voce, semana a semana.</p>
+          <div class="card-line"></div>
+        </div>
+
+        <div class="scroll-stack-card metodo-card" data-card="2">
+          <span class="card-number" aria-hidden="true">03</span>
+          <div class="card-icon" aria-hidden="true">🔥</div>
+          <h3 class="card-title">Mentalidade Elite</h3>
+          <p class="card-desc">O treino fisico e 40% do resultado. Os outros 60% sao mindset, consistencia e o ambiente certo. A Squad oferece os tres.</p>
+          <div class="card-line"></div>
+        </div>
+
+        <div class="scroll-stack-card metodo-card" data-card="3">
+          <span class="card-number" aria-hidden="true">04</span>
+          <div class="card-icon" aria-hidden="true">💎</div>
+          <h3 class="card-title">Acompanhamento Premium</h3>
+          <p class="card-desc">Acesso direto a Benini. Revisoes semanais, ajustes em tempo real, comunidade exclusiva. Voce nunca treina sozinha.</p>
+          <div class="card-line"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     4. SEÇÃO APP
+     ═══════════════════════════════════ -->
+<section class="section-app" id="app" aria-label="Aplicativo Benini Squad">
+  <div class="app-inner">
+
+    <div class="app-phone-col">
+      <div class="app-phone-frame">
+        <div class="app-phone-notch" aria-hidden="true"></div>
+        <div class="app-phone-screen">
+          <div class="app-phone-screen-content" aria-hidden="true">
+            <span class="app-phone-label">Benini App</span>
+          </div>
+        </div>
+        <div class="app-phone-glow" aria-hidden="true"></div>
+        <div class="app-phone-reflection" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <div class="app-text-col">
+      <p class="section-eyebrow reveal-fade">Aplicativo</p>
+      <h2 class="app-section-title reveal-up">Treino de elite<br>no seu bolso.</h2>
+      <p class="app-section-sub reveal-fade">Protocolos personalizados, acompanhamento semanal, comunidade exclusiva e contato direto com Benini — tudo em um unico lugar, na palma da sua mao.</p>
+      <ul class="app-features-list reveal-fade">
+        <li class="app-feature-item">
+          <span class="app-feature-icon" aria-hidden="true">⚡</span>
+          <span>Protocolos personalizados semanais</span>
+        </li>
+        <li class="app-feature-item">
+          <span class="app-feature-icon" aria-hidden="true">💬</span>
+          <span>Chat direto com Benini</span>
+        </li>
+        <li class="app-feature-item">
+          <span class="app-feature-icon" aria-hidden="true">👑</span>
+          <span>Comunidade Squad exclusiva</span>
+        </li>
+        <li class="app-feature-item">
+          <span class="app-feature-icon" aria-hidden="true">📊</span>
+          <span>Acompanhamento de evolucao em tempo real</span>
+        </li>
+      </ul>
+      <a href="#cta" class="btn-primary btn-glass reveal-fade">
+        <span class="btn-primary__label">Quero acesso</span>
+        <span class="btn-primary__icon" aria-hidden="true">→</span>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     5. FEEDBACKS
+     ═══════════════════════════════════ -->
+<section class="section-feedbacks" id="feedbacks" aria-label="Feedbacks das alunas Benini Squad">
+  <div class="feedbacks-header">
+    <p class="section-eyebrow reveal-fade">Feedbacks</p>
+    <h2 class="feedbacks-title reveal-up">Elas transformaram.<br>Elas contaram.</h2>
+    <p class="feedbacks-sub reveal-fade">Prints reais de alunas reais. Sem filtro, sem roteiro.</p>
+  </div>
+
+  <div class="feedbacks-gallery" id="feedbacks-gallery">
+    <div class="feedbacks-slot feedbacks-slot--placeholder" aria-hidden="true"></div>
+    <div class="feedbacks-slot feedbacks-slot--placeholder" aria-hidden="true"></div>
+    <div class="feedbacks-slot feedbacks-slot--placeholder" aria-hidden="true"></div>
+    <div class="feedbacks-slot feedbacks-slot--placeholder" aria-hidden="true"></div>
+    <div class="feedbacks-slot feedbacks-slot--placeholder" aria-hidden="true"></div>
+    <div class="feedbacks-slot feedbacks-slot--placeholder" aria-hidden="true"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     6. MANIFESTO
+     ═══════════════════════════════════ -->
+<section class="section-manifesto" id="manifesto" aria-label="Manifesto Benini Squad">
+  <div class="manifesto-bg-text" aria-hidden="true">SQUAD</div>
+  <div class="manifesto-content">
+    <p class="manifesto-eyebrow reveal-fade">Manifesto</p>
+    <h2 class="manifesto-headline">
+      <span class="word-wrap"><span class="word">Aqui</span></span>
+      <span class="word-wrap"><span class="word">nao</span></span>
+      <span class="word-wrap"><span class="word">se</span></span>
+      <span class="word-wrap"><span class="word">treina</span></span>
+      <span class="word-wrap"><span class="word gold">para</span></span>
+      <span class="word-wrap"><span class="word gold">ser</span></span>
+      <span class="word-wrap"><span class="word gold">menor.</span></span>
+      <br>
+      <span class="word-wrap"><span class="word">Treina-se</span></span>
+      <span class="word-wrap"><span class="word">para</span></span>
+      <span class="word-wrap"><span class="word">tomar</span></span>
+      <span class="word-wrap"><span class="word gold">mais</span></span>
+      <span class="word-wrap"><span class="word gold">espaco.</span></span>
+    </h2>
+    <p class="manifesto-sub reveal-fade">
+      No espelho, na sala, no mundo. A forca nao apaga a feminilidade — ela a revela.
+    </p>
+    <div class="manifesto-cta">
+      <a href="#cta" class="btn-primary btn-glass reveal-fade">
+        <span class="btn-primary__label">Faca parte do time</span>
+        <span class="btn-primary__icon" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     7. SESSÃO COM O VÍDEO E DEMAIS ELEMENTOS
+     ═══════════════════════════════════ -->
+<section class="section-hero-video" id="hero-video" aria-label="Benini Squad — Video e apresentacao">
+
   <div class="hero-visual-scroll-wrap" id="hero-visual-scroll-wrap">
     <div class="hero-visual hero-visual--video" id="hero-visual">
       <div class="hero-visual-media" id="hero-visual-media">
@@ -197,7 +425,6 @@
           preload="auto"
           aria-hidden="true"
         ></video>
-        <div class="hero-visual-keyhole" id="hero-visual-keyhole" aria-hidden="true"></div>
         <div class="hero-visual-video-blur-vignette" aria-hidden="true"></div>
       </div>
       <div
@@ -237,9 +464,6 @@
             <span class="hero-visual-benini-nameplate__label">Lucas Benini</span>
           </div>
         </div>
-      </div>
-      <div class="hero-visual-dumbbell" id="hero-visual-dumbbell" aria-hidden="true">
-        <div id="hero-visual-gltf-slot" class="hero-visual-gltf-slot"></div>
       </div>
       <div
         class="hero-visual-blur-panel hero-visual-blur-layer hero-visual-blur-layer--right"
@@ -287,139 +511,14 @@
 </section>
 
 <!-- ═══════════════════════════════════
-     MANIFESTO
-     ═══════════════════════════════════ -->
-<section class="section-manifesto" id="manifesto" aria-label="Manifesto Benini Squad">
-  <div class="manifesto-bg-text" aria-hidden="true">SQUAD</div>
-  <div class="manifesto-content">
-    <p class="manifesto-eyebrow reveal-fade">Manifesto</p>
-    <h2 class="manifesto-headline">
-      <span class="word-wrap"><span class="word">Aqui</span></span>
-      <span class="word-wrap"><span class="word">nao</span></span>
-      <span class="word-wrap"><span class="word">se</span></span>
-      <span class="word-wrap"><span class="word">treina</span></span>
-      <span class="word-wrap"><span class="word gold">para</span></span>
-      <span class="word-wrap"><span class="word gold">ser</span></span>
-      <span class="word-wrap"><span class="word gold">menor.</span></span>
-      <br>
-      <span class="word-wrap"><span class="word">Treina-se</span></span>
-      <span class="word-wrap"><span class="word">para</span></span>
-      <span class="word-wrap"><span class="word">tomar</span></span>
-      <span class="word-wrap"><span class="word gold">mais</span></span>
-      <span class="word-wrap"><span class="word gold">espaco.</span></span>
-    </h2>
-    <p class="manifesto-sub reveal-fade">
-      No espelho, na sala, no mundo. A forca nao apaga a feminilidade — ela a revela.
-    </p>
-    <div class="manifesto-cta">
-      <a href="#cta" class="btn-primary btn-glass reveal-fade">
-        <span class="btn-primary__label">Faca parte do time</span>
-        <span class="btn-primary__icon" aria-hidden="true">→</span>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════
-     MODELOS 3D — abaixo do Manifesto
+     8. DÚVIDAS MAIS FREQUENTES
      ═══════════════════════════════════ -->
 <section
   class="section-parallax section-woman-models"
   id="woman-models"
-  aria-label="Modelos Benini Squad"
+  aria-label="Duvidas mais frequentes"
 >
   <h2 class="woman-models-section-title">Duvidas mais frequentes</h2>
-  <div class="woman-models-stage" id="woman-models-stage" aria-hidden="true"></div>
-</section>
-
-<!-- ═══════════════════════════════════
-     METODOLOGIA
-     ═══════════════════════════════════ -->
-<section class="section-metodologia" id="metodologia" aria-label="Metodologia Benini Squad">
-  <div
-    class="metodologia-color-bends color-bends-container"
-    id="metodologia-color-bends"
-    aria-hidden="true"
-  ></div>
-  <div class="metodologia-content">
-  <p class="section-eyebrow reveal-fade">Metodologia</p>
-  <h2 class="section-title reveal-up">Ciencia do treino.<br>Arte da transformacao.</h2>
-
-  <div class="metodologia-grid">
-
-    <div class="metodo-card reveal-up" data-3d="true"
-         data-tilt-max="8" data-tilt-speed="400">
-      <span class="card-number" aria-hidden="true">01</span>
-      <div class="card-icon" aria-hidden="true">⚡</div>
-      <h3 class="card-title">Protocolo Cientifico</h3>
-      <p class="card-desc">Cada protocolo e construido sobre fisiologia do exercicio feminino. Periodizacao inteligente que respeita o ciclo hormonal e maximiza resultados.</p>
-      <div class="card-line"></div>
-    </div>
-
-    <div class="metodo-card reveal-up" data-3d="true" style="transition-delay:80ms">
-      <span class="card-number" aria-hidden="true">02</span>
-      <div class="card-icon" aria-hidden="true">🎯</div>
-      <h3 class="card-title">Precisao Individual</h3>
-      <p class="card-desc">Nenhum corpo e igual. Anamnese completa, mapeamento de padroes e ajuste continuo — seu protocolo evolui com voce, semana a semana.</p>
-      <div class="card-line"></div>
-    </div>
-
-    <div class="metodo-card reveal-up" data-3d="true" style="transition-delay:160ms">
-      <span class="card-number" aria-hidden="true">03</span>
-      <div class="card-icon" aria-hidden="true">🔥</div>
-      <h3 class="card-title">Mentalidade Elite</h3>
-      <p class="card-desc">O treino fisico e 40% do resultado. Os outros 60% sao mindset, consistencia e o ambiente certo. A Squad oferece os tres.</p>
-      <div class="card-line"></div>
-    </div>
-
-    <div class="metodo-card reveal-up" data-3d="true" style="transition-delay:240ms">
-      <span class="card-number" aria-hidden="true">04</span>
-      <div class="card-icon" aria-hidden="true">💎</div>
-      <h3 class="card-title">Acompanhamento Premium</h3>
-      <p class="card-desc">Acesso direto a Benini. Revisoes semanais, ajustes em tempo real, comunidade exclusiva. Voce nunca treina sozinha.</p>
-      <div class="card-line"></div>
-    </div>
-
-  </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════
-     TRANSFORMAÇÃO
-     ═══════════════════════════════════ -->
-<section class="section-transformacao" id="transformacao" aria-label="Transformacoes">
-  <p class="section-eyebrow reveal-fade">Resultados</p>
-  <h2 class="section-title reveal-up">Elas chegaram como alunas.<br>Sairam como referencia.</h2>
-
-  <div class="transform-grid-wrap">
-    <div id="transform-circular-text" class="transform-circular-text-mount"></div>
-    <div class="transform-grid reveal-up">
-    <div class="transform-item">
-      <div class="parallax-img" style="background-image:linear-gradient(135deg,#5a4a3a,#3a2a2a); position:absolute; inset:0; width:100%; height:100%;"></div>
-      <div class="transform-overlay"></div>
-      <div class="transform-info">
-        <p class="transform-name">Ana Carolina</p>
-        <p class="transform-result">−12kg · 8 meses</p>
-      </div>
-    </div>
-    <div class="transform-item">
-      <div class="parallax-img" style="background-image:linear-gradient(135deg,#4a3a2a,#2a1a1a); position:absolute; inset:0; width:100%; height:100%;"></div>
-      <div class="transform-overlay"></div>
-      <div class="transform-info">
-        <p class="transform-name">Mariana Silva</p>
-        <p class="transform-result">Hipertrofia · 6 meses</p>
-      </div>
-    </div>
-    <div class="transform-item">
-      <div class="parallax-img" style="background-image:linear-gradient(135deg,#3a2a4a,#1a1a2a); position:absolute; inset:0; width:100%; height:100%;"></div>
-      <div class="transform-overlay"></div>
-      <div class="transform-info">
-        <p class="transform-name">Leticia Ramos</p>
-        <p class="transform-result">Recomposicao · 4 meses</p>
-      </div>
-    </div>
-    </div>
-  </div>
 </section>
 
 <!-- ═══════════════════════════════════
@@ -491,6 +590,8 @@
 <script src="js/woman-models.js"></script>
 <script src="js/color-bends.js"></script>
 <script src="js/metodologia-color-bends.js"></script>
+<script src="js/scroll-stack.js"></script>
+<script src="js/metodologia-scroll-stack.js"></script>
 <script src="js/gradual-blur.js"></script>
 <script src="js/header-gradual-blur.js"></script>
 <script src="js/circular-text.js"></script>

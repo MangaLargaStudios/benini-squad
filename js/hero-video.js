@@ -3,13 +3,7 @@
 const BENINI_REVEAL_LEAD_SEC = 2;
 const BENINI_HOLD_SCROLL_VH = { mobile: 0.85, desktop: 1.15 };
 const HERO_ASIDE_TEXT_HOLD_VH = { mobile: 0.55, desktop: 0.72 };
-const HERO_OVERLAP_SCROLL_VH = { mobile: 1, desktop: 1 };
-const KEYHOLE_PIN_DELAY_RATIO = 0.22;
-const KEYHOLE_SCALE_RATIO = 0.58;
-const KEYHOLE_FADE_RATIO = 0.2;
-const KEYHOLE_SILHOUETTE_ASPECT = 304 / 166;
-const KEYHOLE_MASK_END_BLEED = 1.12;
-const KEYHOLE_SCROLL_RATIO = { mobile: 0.2, desktop: 0.24 };
+const HERO_OVERLAP_SCROLL_VH = { mobile: 0, desktop: 0 };
 const BENINI_BLUR_MAX = { mobile: 5, desktop: 9 };
 
 const isMobileViewport = () => window.matchMedia('(max-width: 768px)').matches;
@@ -165,127 +159,6 @@ function updateBeniniReveal(videoTime, duration, pin, beniniWrap, beniniImg) {
   });
 }
 
-function killHeroKeyholeReveal() {
-  if (typeof ScrollTrigger === 'undefined') return;
-
-  ScrollTrigger.getById('hero-keyhole-reveal')?.kill();
-
-  const keyhole = document.getElementById('hero-visual-keyhole');
-  if (keyhole && typeof gsap !== 'undefined') {
-    gsap.killTweensOf(keyhole);
-  }
-}
-
-function getKeyholeScrollDistance(scrollDistance) {
-  const vh = window.innerHeight;
-  const mobile = isMobileViewport();
-  const ratio = mobile ? KEYHOLE_SCROLL_RATIO.mobile : KEYHOLE_SCROLL_RATIO.desktop;
-  const vhCap = Math.round(vh * (mobile ? 0.52 : 0.62));
-
-  if (scrollDistance) {
-    return Math.max(Math.round(vh * 0.28), Math.min(Math.round(scrollDistance * ratio), vhCap));
-  }
-
-  return vhCap;
-}
-
-function parseKeyholeMaskVmin(vminValue) {
-  const match = /^([\d.]+)vmin$/.exec(String(vminValue).trim());
-  if (!match) return 0;
-  const minDim = Math.min(window.innerWidth, window.innerHeight);
-  return (parseFloat(match[1]) / 100) * minDim;
-}
-
-/** Altura da silhueta (px) para cobrir 100% do container. */
-function getKeyholeMaskEndPx(pin) {
-  const el = pin || document.getElementById('hero-visual');
-  const w = el?.clientWidth || window.innerWidth;
-  const h = el?.clientHeight || window.innerHeight;
-  const heightForWidth = w / KEYHOLE_SILHOUETTE_ASPECT;
-
-  return Math.ceil(Math.max(h, heightForWidth) * KEYHOLE_MASK_END_BLEED);
-}
-
-function getKeyholeMaskMetrics(pin) {
-  const mobile = isMobileViewport();
-  const maskStartPx = parseKeyholeMaskVmin(mobile ? '40vmin' : '48vmin');
-  const maskEndPx = getKeyholeMaskEndPx(pin);
-
-  return {
-    maskStartPx,
-    maskEndPx: Math.max(maskEndPx, maskStartPx + 1),
-  };
-}
-
-function applyHeroKeyholeScrollState(keyhole, progress, metrics) {
-  const { maskStartPx, maskEndPx } = metrics;
-  const activeSpan = 1 - KEYHOLE_PIN_DELAY_RATIO;
-
-  if (progress <= KEYHOLE_PIN_DELAY_RATIO) {
-    keyhole.classList.add('is-keyhole-scaling');
-    keyhole.style.setProperty('--keyhole-mask-size', `${maskStartPx}px`);
-    keyhole.style.opacity = '1';
-    return;
-  }
-
-  const activeProgress = (progress - KEYHOLE_PIN_DELAY_RATIO) / activeSpan;
-  const scaleSpan = KEYHOLE_SCALE_RATIO / (KEYHOLE_SCALE_RATIO + KEYHOLE_FADE_RATIO);
-
-  if (activeProgress <= scaleSpan) {
-    keyhole.classList.add('is-keyhole-scaling');
-    const scaleT = activeProgress / scaleSpan;
-    const maskPx = maskStartPx + (maskEndPx - maskStartPx) * scaleT;
-    keyhole.style.setProperty('--keyhole-mask-size', `${maskPx}px`);
-    keyhole.style.opacity = '1';
-    return;
-  }
-
-  keyhole.classList.remove('is-keyhole-scaling');
-  keyhole.style.setProperty('--keyhole-mask-size', `${maskEndPx}px`);
-  const fadeT = Math.min(1, (activeProgress - scaleSpan) / (1 - scaleSpan));
-  keyhole.style.opacity = String(1 - fadeT);
-}
-
-function initHeroKeyholeReveal(wrap, scrollDistance) {
-  const keyhole = document.getElementById('hero-visual-keyhole');
-  const pin = document.getElementById('hero-visual');
-  if (!keyhole || !wrap || !pin || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
-    return;
-  }
-
-  killHeroKeyholeReveal();
-
-  if (heroVideoReducedMotion()) {
-    gsap.set(keyhole, { opacity: 0 });
-    keyhole.style.setProperty('--keyhole-mask-size', '52vmin');
-    return;
-  }
-
-  const mobile = isMobileViewport();
-  const keyholeScrollPx = getKeyholeScrollDistance(scrollDistance);
-  let metrics = getKeyholeMaskMetrics(pin);
-
-  gsap.set(keyhole, { opacity: 1 });
-  applyHeroKeyholeScrollState(keyhole, 0, metrics);
-
-  ScrollTrigger.create(
-    heroScrollTriggerConfig({
-      id: 'hero-keyhole-reveal',
-      trigger: wrap,
-      start: 'top top',
-      end: `+=${keyholeScrollPx}`,
-      scrub: mobile ? 1 : 1.25,
-      invalidateOnRefresh: true,
-      onRefresh() {
-        metrics = getKeyholeMaskMetrics(pin);
-      },
-      onUpdate(self) {
-        applyHeroKeyholeScrollState(keyhole, self.progress, metrics);
-      },
-    })
-  );
-}
-
 function initHeroScrollVideo() {
   if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
     console.error('[Benini Squad] GSAP / ScrollTrigger não carregados.');
@@ -332,8 +205,6 @@ function initHeroScrollVideo() {
       }
       wrap.style.removeProperty('--hero-scroll-distance');
       video.currentTime = 0;
-      const keyhole = document.getElementById('hero-visual-keyhole');
-      if (keyhole) gsap.set(keyhole, { opacity: 0 });
       return;
     }
 
@@ -372,12 +243,6 @@ function initHeroScrollVideo() {
       animationHoldPx,
       overlapScroll,
     };
-
-    const manifesto = document.getElementById('manifesto');
-    if (manifesto) {
-      manifesto.style.setProperty('--hero-overlap-distance', `${overlapScroll}px`);
-      manifesto.classList.add('section-manifesto--overlap-ready');
-    }
 
     pin.style.setProperty('--hero-video-blur', '0');
     pin.style.setProperty('--hero-video-brightness', '1');
@@ -469,8 +334,6 @@ function initHeroScrollVideo() {
       }
     }
 
-    initHeroKeyholeReveal(wrap, scrollDistance);
-
     if (typeof window.initHeroGridScan === 'function') {
       window.initHeroGridScan();
     }
@@ -516,6 +379,4 @@ function isHeroVideoScrubActive() {
 }
 
 window.initHeroScrollVideo = initHeroScrollVideo;
-window.initHeroKeyholeReveal = initHeroKeyholeReveal;
-window.killHeroKeyholeReveal = killHeroKeyholeReveal;
 window.isHeroVideoScrubActive = isHeroVideoScrubActive;

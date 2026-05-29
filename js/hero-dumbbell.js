@@ -1,73 +1,5 @@
 'use strict';
 
-const DUMBBELL_MODEL_URL = 'models/3d/domyos_dumbbell.pages.glb';
-const DUMBBELL_FIT_SIZE = 2.975 * 1.25;
-const DUMBBELL_SCALE_START_MULT = 0.918;
-const DUMBBELL_SCALE_END_MULT = 1.122;
-const DUMBBELL_BASE_ROTATION = { x: 0.15, y: Math.PI * 0.28, z: 0.05 };
-const DUMBBELL_SCROLL_ROTATION_START = { x: DUMBBELL_BASE_ROTATION.x, y: DUMBBELL_BASE_ROTATION.y, z: 0 };
-const DUMBBELL_SCROLL_ROTATION_END = {
-  x: DUMBBELL_BASE_ROTATION.x,
-  y: DUMBBELL_BASE_ROTATION.y + Math.PI * 0.1,
-  z: Math.PI * 5,
-};
-const DUMBBELL_SCROLL_POSITION_START = { x: 5, y: 0.35, z: 0 };
-const DUMBBELL_SCROLL_POSITION_END = { x: 0.95, y: 0.3, z: 0 };
-
-function configureGltfMaterial(material) {
-  if (!material) return;
-
-  material.side = THREE.DoubleSide;
-
-  if (material.map) {
-    material.map.encoding = THREE.sRGBEncoding;
-  }
-  if (material.emissiveMap) {
-    material.emissiveMap.encoding = THREE.sRGBEncoding;
-  }
-  if (material.metalnessMap) {
-    material.metalnessMap.encoding = THREE.LinearEncoding;
-  }
-  if (material.roughnessMap) {
-    material.roughnessMap.encoding = THREE.LinearEncoding;
-  }
-  if (material.normalMap) {
-    material.normalMap.encoding = THREE.LinearEncoding;
-  }
-
-  material.needsUpdate = true;
-}
-
-function fitModelToScene(model, targetSize = DUMBBELL_FIT_SIZE) {
-  const box = new THREE.Box3().setFromObject(model);
-  const center = box.getCenter(new THREE.Vector3());
-  const size = box.getSize(new THREE.Vector3());
-  const maxDim = Math.max(size.x, size.y, size.z, 0.001);
-  const scale = targetSize / maxDim;
-
-  model.position.sub(center);
-  model.scale.setScalar(scale);
-  model.rotation.set(DUMBBELL_BASE_ROTATION.x, DUMBBELL_BASE_ROTATION.y, DUMBBELL_BASE_ROTATION.z);
-
-  return scale;
-}
-
-function addDumbbellLights(scene) {
-  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-
-  const keyLight = new THREE.DirectionalLight(0xd99f66, 2.2);
-  keyLight.position.set(2.5, 4, 5);
-  scene.add(keyLight);
-
-  const rimLight = new THREE.DirectionalLight(0xeeebdd, 1.1);
-  rimLight.position.set(-4, 1, -3);
-  scene.add(rimLight);
-
-  const fillLight = new THREE.PointLight(0xd99f66, 0.7, 12);
-  fillLight.position.set(0, -1.5, 3);
-  scene.add(fillLight);
-}
-
 const HERO_HOLD_PHASE_SPLIT = { dumbbell: 0.44, blur: 0.26, text: 0.3 };
 const HERO_BLUEPRINT_DEFAULTS = {
   strength: 1,
@@ -95,10 +27,6 @@ const HERO_ASIDE_LINE_HIDDEN = { yPercent: 110, opacity: 0 };
 const HERO_ASIDE_LINE_DELAY = 0.08;
 const HERO_PHASE_SCROLL_IDS = [
   'hero-phase-benini-x',
-  'hero-phase-dumbbell-pos',
-  'hero-phase-dumbbell-rot',
-  'hero-phase-dumbbell-scale',
-  'hero-phase-dumbbell-front',
   'hero-phase-blueprint',
   'hero-phase-blur',
   'hero-phase-text',
@@ -149,11 +77,6 @@ function killHeroPhaseScrolls() {
   const blueprintGrid = document.querySelector('.hero-visual-blueprint-grid');
   if (blueprintGrid) {
     gsap.set(blueprintGrid, mapBlueprintVars(HERO_BLUEPRINT_DEFAULTS));
-  }
-
-  const dumbbellWrap = document.getElementById('hero-visual-dumbbell');
-  if (dumbbellWrap) {
-    dumbbellWrap.classList.remove('is-front');
   }
 
   resetHeroManifestoOverlapLayout();
@@ -290,36 +213,6 @@ function phaseScrollRange(phase) {
   };
 }
 
-function prepareDumbbellForScroll() {
-  const dumbbell = window._dumbbell;
-  if (!dumbbell) return null;
-
-  const baseScale = window._dumbbellFittedScale || dumbbell.scale.x;
-  const scaleStart = baseScale * DUMBBELL_SCALE_START_MULT;
-  const scaleEnd = baseScale * DUMBBELL_SCALE_END_MULT;
-
-  dumbbell.position.set(
-    DUMBBELL_SCROLL_POSITION_START.x,
-    DUMBBELL_SCROLL_POSITION_START.y,
-    DUMBBELL_SCROLL_POSITION_START.z
-  );
-  dumbbell.scale.setScalar(scaleStart);
-  dumbbell.rotation.set(
-    DUMBBELL_SCROLL_ROTATION_START.x,
-    DUMBBELL_SCROLL_ROTATION_START.y,
-    DUMBBELL_SCROLL_ROTATION_START.z
-  );
-  dumbbell.visible = true;
-  dumbbell.traverse((child) => {
-    if (!child.isMesh || !child.material) return;
-    child.material.transparent = false;
-    child.material.opacity = 1;
-    child.material.needsUpdate = true;
-  });
-
-  return { dumbbell, scaleStart, scaleEnd };
-}
-
 function initHeroVideoPhaseScroll() {
   if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
     return;
@@ -337,8 +230,6 @@ function initHeroVideoPhaseScroll() {
   const phases = getHeroHoldPhases(metrics);
   const trigger = wrap;
   const scrub = true;
-  // Amortecimento suave exclusivo para as animações 3D do dumbbell
-  const dumbbellScrub = 0.85;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const heroVisual = document.getElementById('hero-visual');
@@ -347,7 +238,6 @@ function initHeroVideoPhaseScroll() {
   }
 
   const foto = document.getElementById('hero-visual-benini');
-  const dumbbellState = prepareDumbbellForScroll();
 
   if (!reducedMotion && foto) {
     gsap.set(foto, { x: 0 });
@@ -363,73 +253,8 @@ function initHeroVideoPhaseScroll() {
     });
   }
 
-  if (!reducedMotion && dumbbellState) {
-    const { dumbbell, scaleStart, scaleEnd } = dumbbellState;
-    const range = phaseScrollRange(phases.dumbbell);
-    const dumbbellWrap = document.getElementById('hero-visual-dumbbell');
-
-    if (dumbbellWrap) {
-      gsap.set(dumbbellWrap, { opacity: 1 });
-      ScrollTrigger.create(
-        dumbbellScrollTriggerConfig({
-          id: 'hero-phase-dumbbell-front',
-          trigger,
-          start: range.start,
-          end: phaseScrollRange(phases.blur).end,
-          onEnter: () => dumbbellWrap.classList.add('is-front'),
-          onLeave: () => dumbbellWrap.classList.remove('is-front'),
-          onEnterBack: () => dumbbellWrap.classList.add('is-front'),
-          onLeaveBack: () => dumbbellWrap.classList.remove('is-front'),
-        })
-      );
-    }
-
-    gsap.to(dumbbell.position, {
-      x: DUMBBELL_SCROLL_POSITION_END.x,
-      y: DUMBBELL_SCROLL_POSITION_END.y,
-      z: DUMBBELL_SCROLL_POSITION_END.z,
-      ease: 'power2.out',
-      scrollTrigger: dumbbellScrollTriggerConfig({
-        id: 'hero-phase-dumbbell-pos',
-        trigger,
-        ...range,
-        scrub: dumbbellScrub,
-      }),
-    });
-
-    gsap.to(dumbbell.rotation, {
-      x: DUMBBELL_SCROLL_ROTATION_END.x,
-      y: DUMBBELL_SCROLL_ROTATION_END.y,
-      z: DUMBBELL_SCROLL_ROTATION_END.z,
-      ease: 'power2.out',
-      scrollTrigger: dumbbellScrollTriggerConfig({
-        id: 'hero-phase-dumbbell-rot',
-        trigger,
-        ...range,
-        scrub: dumbbellScrub,
-      }),
-    });
-
-    gsap.fromTo(
-      dumbbell.scale,
-      { x: scaleStart, y: scaleStart, z: scaleStart },
-      {
-        x: scaleEnd,
-        y: scaleEnd,
-        z: scaleEnd,
-        ease: 'power2.out',
-        scrollTrigger: dumbbellScrollTriggerConfig({
-          id: 'hero-phase-dumbbell-scale',
-          trigger,
-          ...range,
-          scrub: dumbbellScrub,
-        }),
-      }
-    );
-  }
-
   const blueprintGrid = document.querySelector('.hero-visual-blueprint-grid');
-  if (!reducedMotion && blueprintGrid && dumbbellState) {
+  if (!reducedMotion && blueprintGrid) {
     gsap.set(blueprintGrid, mapBlueprintVars(HERO_BLUEPRINT_DEFAULTS));
     gsap.fromTo(
       blueprintGrid,
@@ -527,13 +352,9 @@ function initHeroVideoPhaseScroll() {
     window.__heroOverlapProgressStart = phases.overlap.startPx / scrollDistance;
     window.__heroOverlapProgressEnd =
       (phases.overlap.startPx + phases.overlap.lengthPx) / scrollDistance;
+  }
 
-    initHeroManifestoOverlapScroll(trigger, phases, scrub);
-
-    if (typeof window.initManifestoOverlapRevealScroll === 'function') {
-      window.initManifestoOverlapRevealScroll(trigger, phases, scrub);
-    }
-  } else if (typeof window.registerManifestoViewportReveal === 'function') {
+  if (typeof window.registerManifestoViewportReveal === 'function') {
     window.registerManifestoViewportReveal();
   }
 
@@ -545,7 +366,7 @@ let heroPhaseScrollSignature = '';
 
 function getHeroPhaseScrollSignature() {
   const metrics = window.__heroVideoScrollMetrics;
-  return `${metrics?.scrollDistance || 0}:${!!window._dumbbell}`;
+  return String(metrics?.scrollDistance || 0);
 }
 
 function scheduleHeroPhaseScrollInit() {
@@ -566,16 +387,6 @@ function scheduleHeroPhaseScrollInit() {
       return;
     }
 
-    if (!window._dumbbell) {
-      if (!window.__heroPhaseScrollWaitAt) {
-        window.__heroPhaseScrollWaitAt = Date.now();
-      }
-      if (Date.now() - window.__heroPhaseScrollWaitAt < 2500) {
-        scheduleHeroPhaseScrollInit();
-        return;
-      }
-    }
-
     const signature = getHeroPhaseScrollSignature();
     if (signature === heroPhaseScrollSignature) {
       return;
@@ -587,184 +398,7 @@ function scheduleHeroPhaseScrollInit() {
 }
 
 function initDumbbellScroll() {
-  if (!window._dumbbell) {
-    scheduleHeroPhaseScrollInit();
-    return;
-  }
-
-  const signature = getHeroPhaseScrollSignature();
-  if (signature === heroPhaseScrollSignature) {
-    return;
-  }
-  heroPhaseScrollSignature = signature;
-  initHeroVideoPhaseScroll();
-}
-
-function startOrbit() {
-  if (!window._dumbbell || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
-    return;
-  }
-
-  const wrap = document.getElementById('hero-visual-scroll-wrap');
-  const videoST = ScrollTrigger.getById('hero-video-scrub');
-
-  if (!wrap || !videoST) {
-    requestAnimationFrame(startOrbit);
-    return;
-  }
-
-  const proxy = { angle: 0 };
-
-  const scrollConfig = {
-    trigger: wrap,
-    start: videoST.start,
-    end: videoST.end,
-    scrub: 1.5,
-    invalidateOnRefresh: true,
-  };
-
-  if (window.beniniUsesLenisScroller) {
-    scrollConfig.scroller = document.body;
-  }
-
-  gsap.to(proxy, {
-    angle: Math.PI * 2,
-    ease: 'none',
-    scrollTrigger: scrollConfig,
-    onUpdate() {
-      const x = Math.cos(proxy.angle) * 1.4;
-      const y = Math.sin(proxy.angle) * 0.9;
-      const z = Math.sin(proxy.angle) * 1.0;
-
-      window._dumbbell.position.set(x, y, z);
-      window._dumbbell.scale.setScalar(0.7 + ((z + 1) / 2) * 0.5);
-    },
-  });
-}
-
-function initDumbbellOrbit() {
-  if (typeof THREE === 'undefined' || typeof THREE.GLTFLoader === 'undefined') {
-    return;
-  }
-
-  if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
-    return;
-  }
-
-  gsap.registerPlugin(ScrollTrigger);
-
-  const slot = document.getElementById('hero-visual-gltf-slot');
-  if (!slot) return;
-
-  const resizeRenderer = () => {
-    const width = Math.max(slot.clientWidth, 1);
-    const height = Math.max(slot.clientHeight, 1);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-    renderer.setSize(width, height);
-  };
-
-  const W = Math.max(slot.clientWidth, 1);
-  const H = Math.max(slot.clientHeight, 1);
-
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(38, W / H, 0.1, 100);
-  window.beniniCamera = camera;
-  camera.position.set(0, 0.08, 4.4);
-
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(W, H);
-  renderer.outputEncoding = THREE.sRGBEncoding;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.15;
-  renderer.physicallyCorrectLights = true;
-  slot.appendChild(renderer.domElement);
-  renderer.domElement.style.cssText =
-    'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;';
-
-  addDumbbellLights(scene);
-
-  const loader =
-    typeof window.createBeniniGLTFLoader === 'function'
-      ? window.createBeniniGLTFLoader()
-      : new THREE.GLTFLoader();
-  loader.load(DUMBBELL_MODEL_URL, (gltf) => {
-    const model = gltf.scene;
-
-    model.traverse((child) => {
-      if (!child.isMesh) return;
-      configureGltfMaterial(child.material);
-    });
-
-    const fittedScale = fitModelToScene(model);
-    scene.add(model);
-    window._dumbbell = model;
-    window._dumbbellFittedScale = fittedScale;
-    scheduleHeroPhaseScrollInit();
-  });
-
-  resizeRenderer();
-  window.addEventListener('resize', resizeRenderer);
-  if (typeof ResizeObserver !== 'undefined') {
-    const resizeObserver = new ResizeObserver(() => resizeRenderer());
-    resizeObserver.observe(slot);
-  }
-
-  let manifestoIntersecting = false;
-  const manifestoEl = document.getElementById('manifesto');
-  if (manifestoEl && typeof IntersectionObserver !== 'undefined') {
-    new IntersectionObserver(
-      (entries) => {
-        manifestoIntersecting = entries.some(
-          (e) => e.isIntersecting && e.boundingClientRect.top < window.innerHeight * 0.92
-        );
-      },
-      { threshold: 0, rootMargin: '0px 0px -8% 0px' }
-    ).observe(manifestoEl);
-  }
-
-  function shouldRenderDumbbell() {
-    if (typeof window.__beniniIsHeroOverlapActive === 'function' && window.__beniniIsHeroOverlapActive()) {
-      return false;
-    }
-
-    if (document.body.classList.contains('is-hero-manifesto-overlap')) {
-      return false;
-    }
-
-    if (manifestoIntersecting) {
-      return false;
-    }
-
-    if (typeof window.isHeroVideoScrubActive === 'function') {
-      return window.isHeroVideoScrubActive();
-    }
-    const visual = document.getElementById('hero-visual');
-    if (!visual) return false;
-    const rect = visual.getBoundingClientRect();
-    return rect.bottom > 0 && rect.top < window.innerHeight;
-  }
-
-  let dumbbellScrollFrame = 0;
-
-  function render() {
-    requestAnimationFrame(render);
-    if (!shouldRenderDumbbell()) return;
-
-    if (window.__beniniIsScrolling) {
-      dumbbellScrollFrame += 1;
-      if (dumbbellScrollFrame % 2 !== 0) return;
-    } else {
-      dumbbellScrollFrame = 0;
-    }
-
-    renderer.render(scene, camera);
-  }
-  render();
-
-  window.beniniScene = scene;
-  window.beniniRenderer = renderer;
+  scheduleHeroPhaseScrollInit();
 }
 
 function initHeroBlueprintGridParallax() {
@@ -861,13 +495,10 @@ function initHeroBlueprintGridParallax() {
   });
 }
 
-window.initDumbbellOrbit = initDumbbellOrbit;
-window.initHeroDumbbell = initDumbbellOrbit;
 window.initDumbbellScroll = initDumbbellScroll;
 window.scheduleHeroPhaseScrollInit = scheduleHeroPhaseScrollInit;
 window.initHeroVideoPhaseScroll = initHeroVideoPhaseScroll;
 window.initHeroBlueprintGridParallax = initHeroBlueprintGridParallax;
 window.setHeroOverlapCoverMode = setHeroOverlapCoverMode;
 window.killHeroPhaseScrolls = killHeroPhaseScrolls;
-window.startOrbit = startOrbit;
 window.updateHeroDumbbell = () => {};
