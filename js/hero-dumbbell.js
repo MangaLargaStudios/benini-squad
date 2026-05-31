@@ -26,13 +26,36 @@ function mapBlueprintVars({ strength, lineA, lineB, layerB }) {
 const HERO_ASIDE_LINE_HIDDEN = { yPercent: 110, opacity: 0 };
 const HERO_ASIDE_LINE_DELAY = 0.08;
 const HERO_PHASE_SCROLL_IDS = [
-  'hero-phase-benini-x',
   'hero-phase-blueprint',
   'hero-phase-blur',
   'hero-phase-text',
   'hero-manifesto-overlap',
   'manifesto-overlap-text',
 ];
+
+function getHeroBeniniTextAsides() {
+  return [
+    document.getElementById('benini-text-aside-left'),
+    document.getElementById('benini-text-aside-right'),
+  ].filter(Boolean);
+}
+
+function getHeroBeniniAsideLines() {
+  return document.querySelectorAll('#hero-visual .hero-benini-text-aside .aside-line');
+}
+
+function resetHeroBeniniTextAsides() {
+  const band = document.querySelector('.hero-benini-text-band');
+  if (band) {
+    band.setAttribute('aria-hidden', 'true');
+  }
+
+  getHeroBeniniTextAsides().forEach((aside) => {
+    aside.dataset.asideScrollReady = 'false';
+    gsap.set(aside, { opacity: 0, visibility: 'hidden' });
+    gsap.set(aside.querySelectorAll('.aside-line'), HERO_ASIDE_LINE_HIDDEN);
+  });
+}
 
 function dumbbellScrollTriggerConfig(overrides = {}) {
   const config = {
@@ -57,11 +80,9 @@ function killHeroPhaseScrolls() {
 
   HERO_PHASE_SCROLL_IDS.forEach((id) => ScrollTrigger.getById(id)?.kill());
 
-  const aside = document.getElementById('benini-text-aside');
+  const aside = document.getElementById('benini-text-aside-left');
   if (aside) {
-    aside.dataset.asideScrollReady = 'false';
-    gsap.set(aside, { opacity: 0, visibility: 'hidden' });
-    gsap.set(aside.querySelectorAll('.aside-line'), HERO_ASIDE_LINE_HIDDEN);
+    resetHeroBeniniTextAsides();
   }
 
   const beniniNameplate = document.getElementById('hero-visual-benini-nameplate');
@@ -235,18 +256,8 @@ function initHeroVideoPhaseScroll() {
 
   const foto = document.getElementById('hero-visual-benini');
 
-  if (!reducedMotion && foto) {
+  if (foto) {
     gsap.set(foto, { x: 0 });
-    gsap.to(foto, {
-      x: '-30vw',
-      ease: 'none',
-      scrollTrigger: dumbbellScrollTriggerConfig({
-        id: 'hero-phase-benini-x',
-        trigger,
-        ...phaseScrollRange(phases.dumbbell),
-        scrub,
-      }),
-    });
   }
 
   const blueprintGrid = document.querySelector('.hero-visual-blueprint-grid');
@@ -289,21 +300,29 @@ function initHeroVideoPhaseScroll() {
     }
   }
 
-  const aside = document.getElementById('benini-text-aside');
-  const lines = aside?.querySelectorAll('.aside-line');
+  const asides = getHeroBeniniTextAsides();
+  const lines = getHeroBeniniAsideLines();
   const beniniNameplate = document.getElementById('hero-visual-benini-nameplate');
 
-  if (aside && lines?.length) {
+  if (asides.length && lines.length) {
+    const band = document.querySelector('.hero-benini-text-band');
+
     if (reducedMotion) {
-      gsap.set(aside, { opacity: 1, visibility: 'visible' });
+      if (band) band.setAttribute('aria-hidden', 'false');
+      asides.forEach((aside) => {
+        aside.dataset.asideScrollReady = 'true';
+        gsap.set(aside, { opacity: 1, visibility: 'visible' });
+      });
       gsap.set(lines, { opacity: 1, yPercent: 0 });
       if (beniniNameplate) {
         gsap.set(beniniNameplate, { opacity: 1, visibility: 'visible' });
       }
-      aside.dataset.asideScrollReady = 'true';
     } else {
-      aside.dataset.asideScrollReady = 'true';
-      gsap.set(aside, { opacity: 0, visibility: 'hidden' });
+      if (band) band.setAttribute('aria-hidden', 'true');
+      asides.forEach((aside) => {
+        aside.dataset.asideScrollReady = 'true';
+        gsap.set(aside, { opacity: 0, visibility: 'hidden' });
+      });
       gsap.set(lines, HERO_ASIDE_LINE_HIDDEN);
       if (beniniNameplate) {
         gsap.set(beniniNameplate, { opacity: 0, visibility: 'hidden' });
@@ -318,8 +337,12 @@ function initHeroVideoPhaseScroll() {
         }),
       });
 
-      tl.set(aside, { visibility: 'visible' }, 0);
-      tl.to(aside, { opacity: 1, ease: 'none', duration: 0.05 }, 0);
+      asides.forEach((aside) => {
+        tl.set(aside, { visibility: 'visible' }, 0);
+        tl.to(aside, { opacity: 1, ease: 'none', duration: 0.05 }, 0);
+      });
+      tl.call(() => band?.setAttribute('aria-hidden', 'false'), null, 0);
+
       if (beniniNameplate) {
         tl.set(beniniNameplate, { visibility: 'visible' }, 0);
         tl.to(

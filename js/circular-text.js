@@ -102,7 +102,14 @@ function positionTransformCircularText() {
   const wrap = mount?.closest('.transform-grid-wrap');
   const section = wrap?.closest('.section-transformacao');
   const title = section?.querySelector('.section-title');
-  const lastCard = wrap?.querySelector('.transform-item:last-child');
+  const carousel = wrap?.querySelector('#transform-carousel');
+  const currentPage = carousel ? parseInt(carousel.dataset.page || '0', 10) : 0;
+  const lastCard =
+    wrap?.querySelector(
+      `.transform-carousel__slide[data-page="${currentPage}"] .transform-card-unit:last-child .transform-item`
+    ) ||
+    wrap?.querySelector('.transform-card-unit:last-child .transform-item') ||
+    wrap?.querySelector('.transform-item:last-child');
   if (!mount || !wrap || !lastCard || !title) return;
 
   const wrapRect = wrap.getBoundingClientRect();

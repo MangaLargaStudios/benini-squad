@@ -186,7 +186,7 @@ function setMetodologiaWaveLinesHidden(lines) {
   gsap.set(lines, {
     ...METODOLOGIA_WAVE_HIDDEN,
     transformOrigin: '50% 100%',
-    overwrite: 'auto',
+    overwrite: true,
   });
 }
 
@@ -198,7 +198,7 @@ function animateMetodologiaWaveLines(lines, mode, direction) {
       ...METODOLOGIA_WAVE_SHOW,
       transformOrigin: '50% 100%',
       stagger: getWaveStagger(direction, 'show'),
-      overwrite: 'auto',
+      overwrite: true,
     });
   }
 
@@ -206,7 +206,7 @@ function animateMetodologiaWaveLines(lines, mode, direction) {
     ...METODOLOGIA_WAVE_HIDE,
     transformOrigin: '50% 100%',
     stagger: getWaveStagger(direction, 'hide'),
-    overwrite: 'auto',
+    overwrite: true,
   });
 }
 

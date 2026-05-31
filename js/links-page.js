@@ -211,6 +211,23 @@
     window.initBeniniColorBends(section, container);
   }
 
+  const profileMount = document.getElementById('links-profile-card');
+  if (profileMount && typeof window.mountProfileCard === 'function') {
+    window.mountProfileCard(profileMount, {
+      avatarUrl: '../images/Benini-Alpha.webp',
+      name: 'Lucas Benini',
+      title: 'Treinador · Benini Squad',
+      showUserInfo: false,
+      className: 'pc-card-wrapper--links',
+      enableTilt: true,
+      enableMobileTilt: false,
+      behindGlowEnabled: true,
+      behindGlowColor: 'rgba(238, 235, 221, 0.22)',
+      innerGradient:
+        'linear-gradient(145deg, rgba(217, 159, 102, 0.38) 0%, rgba(58, 51, 52, 0.72) 100%)',
+    });
+  }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', playLinksPageEntrance, { once: true });
   } else {

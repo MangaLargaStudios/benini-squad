@@ -39,10 +39,6 @@
 <!-- Noise grain overlay -->
 <div class="noise-overlay" aria-hidden="true"></div>
 
-<!-- Custom cursor -->
-<div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
-<div class="cursor-ring" id="cursor-ring" aria-hidden="true"></div>
-
 <!-- Gradual blur no topo (atrás do header) -->
 <div class="header-gradual-blur" id="header-gradual-blur" aria-hidden="true"></div>
 
@@ -198,36 +194,119 @@
      2. RESULTADOS / TRANSFORMAÇÕES
      ═══════════════════════════════════ -->
 <section class="section-transformacao" id="transformacao" aria-label="Transformacoes">
-  <p class="section-eyebrow reveal-fade">Resultados</p>
-  <h2 class="section-title reveal-up">Elas chegaram como alunas.<br>Sairam como referencia.</h2>
+  <div class="section-transformacao__header">
+    <p class="section-eyebrow reveal-fade">Resultados</p>
+    <h2 class="section-title reveal-up">
+      <span class="section-title-scale">
+        <span class="section-title-line">Elas chegaram como alunas.</span>
+        <span class="section-title-line">Saíram como referência.</span>
+      </span>
+    </h2>
+  </div>
 
   <div class="transform-grid-wrap">
-    <div id="transform-circular-text" class="transform-circular-text-mount"></div>
-    <div class="transform-grid reveal-up">
-    <div class="transform-item">
-      <div class="parallax-img" style="background-image:linear-gradient(135deg,#5a4a3a,#3a2a2a); position:absolute; inset:0; width:100%; height:100%;"></div>
-      <div class="transform-overlay"></div>
-      <div class="transform-info">
-        <p class="transform-name">Ana Carolina</p>
-        <p class="transform-result">−12kg · 8 meses</p>
+    <div class="transform-carousel reveal-up" id="transform-carousel" data-page="0">
+      <button
+        type="button"
+        class="transform-carousel__nav transform-carousel__nav--prev"
+        aria-label="Resultados anteriores"
+        disabled
+      >
+        <span aria-hidden="true">←</span>
+      </button>
+
+      <div class="transform-carousel__viewport">
+        <div class="transform-carousel__track">
+          <div class="transform-grid transform-carousel__slide" data-page="0" aria-hidden="false">
+            <div class="transform-item">
+              <div class="parallax-img" style="background-image:linear-gradient(135deg,#5a4a3a,#3a2a2a); position:absolute; inset:0; width:100%; height:100%;"></div>
+              <div class="transform-overlay"></div>
+              <div class="transform-info">
+                <p class="transform-name">Ana Carolina</p>
+                <p class="transform-result">-12kg · 8 meses</p>
+              </div>
+            </div>
+            <div class="transform-item">
+              <div class="parallax-img" style="background-image:linear-gradient(135deg,#4a3a2a,#2a1a1a); position:absolute; inset:0; width:100%; height:100%;"></div>
+              <div class="transform-overlay"></div>
+              <div class="transform-info">
+                <p class="transform-name">Mariana Silva</p>
+                <p class="transform-result">Hipertrofia · 6 meses</p>
+              </div>
+            </div>
+            <div class="transform-item">
+              <div class="parallax-img" style="background-image:linear-gradient(135deg,#3a2a4a,#1a1a2a); position:absolute; inset:0; width:100%; height:100%;"></div>
+              <div class="transform-overlay"></div>
+              <div class="transform-info">
+                <p class="transform-name">Leticia Ramos</p>
+                <p class="transform-result">Recomposicao · 4 meses</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="transform-grid transform-carousel__slide" data-page="1" aria-hidden="true">
+            <div class="transform-item">
+              <div class="parallax-img" style="background-image:linear-gradient(135deg,#4a3a35,#2a2520); position:absolute; inset:0; width:100%; height:100%;"></div>
+              <div class="transform-overlay"></div>
+              <div class="transform-info">
+                <p class="transform-name">Julia Costa</p>
+                <p class="transform-result">-8kg · 5 meses</p>
+              </div>
+            </div>
+            <div class="transform-item">
+              <div class="parallax-img" style="background-image:linear-gradient(135deg,#3a354a,#1a1a28); position:absolute; inset:0; width:100%; height:100%;"></div>
+              <div class="transform-overlay"></div>
+              <div class="transform-info">
+                <p class="transform-name">Beatriz Alves</p>
+                <p class="transform-result">Forca · 7 meses</p>
+              </div>
+            </div>
+            <div class="transform-item">
+              <div class="parallax-img" style="background-image:linear-gradient(135deg,#4a4035,#282018); position:absolute; inset:0; width:100%; height:100%;"></div>
+              <div class="transform-overlay"></div>
+              <div class="transform-info">
+                <p class="transform-name">Camila Rocha</p>
+                <p class="transform-result">Definicao · 6 meses</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="transform-grid transform-carousel__slide" data-page="2" aria-hidden="true">
+            <div class="transform-item">
+              <div class="parallax-img" style="background-image:linear-gradient(135deg,#453a42,#221820); position:absolute; inset:0; width:100%; height:100%;"></div>
+              <div class="transform-overlay"></div>
+              <div class="transform-info">
+                <p class="transform-name">Fernanda Dias</p>
+                <p class="transform-result">-10kg · 9 meses</p>
+              </div>
+            </div>
+            <div class="transform-item">
+              <div class="parallax-img" style="background-image:linear-gradient(135deg,#3a424a,#181e22); position:absolute; inset:0; width:100%; height:100%;"></div>
+              <div class="transform-overlay"></div>
+              <div class="transform-info">
+                <p class="transform-name">Gabriela Nunes</p>
+                <p class="transform-result">Hipertrofia · 8 meses</p>
+              </div>
+            </div>
+            <div class="transform-item">
+              <div class="parallax-img" style="background-image:linear-gradient(135deg,#4a3a38,#241816); position:absolute; inset:0; width:100%; height:100%;"></div>
+              <div class="transform-overlay"></div>
+              <div class="transform-info">
+                <p class="transform-name">Isabela Martins</p>
+                <p class="transform-result">Recomposicao · 5 meses</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="transform-item">
-      <div class="parallax-img" style="background-image:linear-gradient(135deg,#4a3a2a,#2a1a1a); position:absolute; inset:0; width:100%; height:100%;"></div>
-      <div class="transform-overlay"></div>
-      <div class="transform-info">
-        <p class="transform-name">Mariana Silva</p>
-        <p class="transform-result">Hipertrofia · 6 meses</p>
-      </div>
-    </div>
-    <div class="transform-item">
-      <div class="parallax-img" style="background-image:linear-gradient(135deg,#3a2a4a,#1a1a2a); position:absolute; inset:0; width:100%; height:100%;"></div>
-      <div class="transform-overlay"></div>
-      <div class="transform-info">
-        <p class="transform-name">Leticia Ramos</p>
-        <p class="transform-result">Recomposicao · 4 meses</p>
-      </div>
-    </div>
+
+      <button
+        type="button"
+        class="transform-carousel__nav transform-carousel__nav--next"
+        aria-label="Proximos resultados"
+      >
+        <span aria-hidden="true">→</span>
+      </button>
     </div>
   </div>
 </section>
@@ -529,11 +608,16 @@
 
     <div class="feedbacks-swap-wrap reveal-fade">
       <div class="feedbacks-card-swap" id="feedbacks-card-swap">
-        <div class="card"><img src="images/print_wpp1.jpeg" alt="Feedback de aluna Benini Squad 1" loading="lazy" width="240" height="370"></div>
-        <div class="card"><img src="images/print_wpp2.webp" alt="Feedback de aluna Benini Squad 2" loading="lazy" width="240" height="370"></div>
-        <div class="card"><img src="images/print_wpp3.webp" alt="Feedback de aluna Benini Squad 3" loading="lazy" width="240" height="370"></div>
-        <div class="card"><img src="images/print_wpp4.webp" alt="Feedback de aluna Benini Squad 4" loading="lazy" width="240" height="370"></div>
-        <div class="card"><img src="images/print_wpp5.webp" alt="Feedback de aluna Benini Squad 5" loading="lazy" width="240" height="370"></div>
+        <div class="card"><img src="images/print_wpp1.jpeg" alt="Feedback de aluna Benini Squad 1" loading="lazy" width="240" height="427"></div>
+        <div class="card"><img src="images/print_wpp2.webp" alt="Feedback de aluna Benini Squad 2" loading="lazy" width="240" height="427"></div>
+        <div class="card"><img src="images/print_wpp3.webp" alt="Feedback de aluna Benini Squad 3" loading="lazy" width="240" height="427"></div>
+        <div class="card"><img src="images/print_wpp4.webp" alt="Feedback de aluna Benini Squad 4" loading="lazy" width="240" height="427"></div>
+        <div class="card"><img src="images/print_wpp5.webp" alt="Feedback de aluna Benini Squad 5" loading="lazy" width="240" height="427"></div>
+        <div class="card"><img src="images/print_wpp1.jpeg" alt="Feedback de aluna Benini Squad 6" loading="lazy" width="240" height="427"></div>
+        <div class="card"><img src="images/print_wpp2.webp" alt="Feedback de aluna Benini Squad 7" loading="lazy" width="240" height="427"></div>
+        <div class="card"><img src="images/print_wpp3.webp" alt="Feedback de aluna Benini Squad 8" loading="lazy" width="240" height="427"></div>
+        <div class="card"><img src="images/print_wpp4.webp" alt="Feedback de aluna Benini Squad 9" loading="lazy" width="240" height="427"></div>
+        <div class="card"><img src="images/print_wpp5.webp" alt="Feedback de aluna Benini Squad 10" loading="lazy" width="240" height="427"></div>
       </div>
     </div>
   </div>
@@ -606,29 +690,40 @@
         id="hero-visual-blur-blueprint-grid"
         aria-hidden="true"
       ></div>
-      <div id="benini-text-aside" class="hero-benini-text-aside" aria-hidden="true">
-        <p class="hero-benini-text-aside-eyebrow aside-line-wrap">
-          <span class="aside-line">Benini Squad</span>
-        </p>
-        <h3 class="hero-benini-text-aside-title">
-          <span class="aside-line-wrap">
-            <span class="aside-line">Quanto mais <span class="gold">forte,</span></span>
-          </span>
-          <span class="aside-line-wrap">
-            <span class="aside-line">mais <span class="gold">feminina.</span></span>
-          </span>
-        </h3>
-        <p class="hero-benini-text-aside-body">
-          <span class="aside-line-wrap">
-            <span class="aside-line">Protocolo de elite para mulheres</span>
-          </span>
-          <span class="aside-line-wrap">
-            <span class="aside-line">que treinam com intencao, constancia</span>
-          </span>
-          <span class="aside-line-wrap">
-            <span class="aside-line">e resultado real.</span>
-          </span>
-        </p>
+      <div class="hero-benini-text-band" aria-hidden="true">
+        <div id="benini-text-aside-left" class="hero-benini-text-aside hero-benini-text-aside--left">
+          <div class="hero-benini-text-aside__inner">
+            <p class="hero-benini-text-aside-eyebrow aside-line-wrap">
+              <span class="aside-line">Benini Squad</span>
+            </p>
+            <p class="hero-benini-text-aside-body">
+              <span class="aside-line-wrap">
+                <span class="aside-line">Protocolo de elite para mulheres</span>
+              </span>
+              <span class="aside-line-wrap">
+                <span class="aside-line">que treinam com intencao, constancia</span>
+              </span>
+              <span class="aside-line-wrap">
+                <span class="aside-line">e resultado real.</span>
+              </span>
+            </p>
+          </div>
+        </div>
+        <div id="benini-text-aside-right" class="hero-benini-text-aside hero-benini-text-aside--right">
+          <div class="hero-benini-text-aside__inner">
+            <h3 class="hero-benini-text-aside-title">
+              <span class="aside-line-wrap">
+                <span class="aside-line">Ciência que <span class="gold">respeita seu ciclo.</span></span>
+              </span>
+              <span class="aside-line-wrap">
+                <span class="aside-line">Protocolo que <span class="gold">evolui com você.</span></span>
+              </span>
+              <span class="aside-line-wrap">
+                <span class="aside-line">Resultado que <span class="gold">fala por si só.</span></span>
+              </span>
+            </h3>
+          </div>
+        </div>
       </div>
       <div class="hero-visual-vignette" aria-hidden="true"></div>
       <div class="scroll-indicator" id="scroll-indicator" aria-hidden="true">
@@ -727,7 +822,8 @@
 <script src="js/card-swap.js"></script>
 <script src="js/gradual-blur.js"></script>
 <script src="js/header-gradual-blur.js"></script>
-<script src="js/circular-text.js"></script>
+<script src="js/transform-scrub.js"></script>
+<script src="js/transform-carousel.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

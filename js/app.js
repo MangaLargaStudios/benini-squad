@@ -358,45 +358,6 @@ function triggerScrollRevealCheck() {
 window.triggerScrollRevealCheck = triggerScrollRevealCheck;
 
 /* ─────────────────────────────────────────────
-   2. CUSTOM CURSOR (pointer fino apenas)
-   ───────────────────────────────────────────── */
-function initCursor() {
-  if (isTouchDevice()) return;
-
-  const dot = document.getElementById('cursor-dot');
-  const ring = document.getElementById('cursor-ring');
-  if (!dot || !ring) return;
-
-  let mx = 0;
-  let my = 0;
-  let rx = 0;
-  let ry = 0;
-
-  document.addEventListener('mousemove', (e) => {
-    mx = e.clientX;
-    my = e.clientY;
-    gsap.to(dot, { x: mx, y: my, duration: 0.08, ease: 'none' });
-  });
-
-  function animRing() {
-    const dx = mx - rx;
-    const dy = my - ry;
-    if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
-      rx += dx * 0.12;
-      ry += dy * 0.12;
-      gsap.set(ring, { x: rx, y: ry });
-    }
-    requestAnimationFrame(animRing);
-  }
-  animRing();
-
-  document.querySelectorAll('a, button, .metodo-card, .pricing-card, .transform-item').forEach((el) => {
-    el.addEventListener('mouseenter', () => ring.classList.add('hover'));
-    el.addEventListener('mouseleave', () => ring.classList.remove('hover'));
-  });
-}
-
-/* ─────────────────────────────────────────────
    3. NAV — scroll behavior + split text entrance
    ───────────────────────────────────────────── */
 function splitNavText(element) {
@@ -1494,7 +1455,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   initScrollSync();
   initMarqueeStrip();
-  initCursor();
   initNav();
 
   if (typeof window.initHeaderGradualBlur === 'function') {

@@ -275,7 +275,7 @@ function initHeroScrollVideo() {
         pinSpacing: true,
         pinReparent: false,
         scrub: scrubSmooth,
-        anticipatePin: 0,
+        anticipatePin: 1,
         fastScrollEnd: isMobileViewport(),
         onLeave: () => {
           if (typeof window.setHeroOverlapCoverMode === 'function') {

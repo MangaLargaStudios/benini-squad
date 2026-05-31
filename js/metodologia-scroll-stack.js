@@ -120,6 +120,16 @@ function initMetodologiaScrollStack() {
     return wave?.getMetodologiaSlideLines(slide) || [];
   }
 
+  function hideMetodologiaSlideInstantly(slide) {
+    if (!slide) return;
+
+    const lines = getMetodologiaSlideLines(slide);
+    gsap.killTweensOf(lines);
+    slide.classList.remove('is-active', 'is-leaving');
+    slide.setAttribute('aria-hidden', 'true');
+    wave?.setMetodologiaWaveLinesHidden(lines);
+  }
+
   function finalizeCopySlides(activeIndex) {
     slides.forEach((slide, i) => {
       const lines = getMetodologiaSlideLines(slide);
@@ -160,7 +170,13 @@ function initMetodologiaScrollStack() {
     const activeLines = getMetodologiaSlideLines(activeSlide);
 
     copyTween?.kill();
-    slides.forEach((slide) => gsap.killTweensOf(getMetodologiaSlideLines(slide)));
+    slides.forEach((slide, i) => {
+      if (i === safeIndex) {
+        gsap.killTweensOf(activeLines);
+        return;
+      }
+      hideMetodologiaSlideInstantly(slide);
+    });
 
     activeSlide.classList.add('is-active');
     activeSlide.classList.remove('is-leaving');
@@ -186,45 +202,63 @@ function initMetodologiaScrollStack() {
       return;
     }
 
-    const scrollDirection = nextIndex > prevIndex ? 1 : -1;
-    const prevSlide = prevIndex >= 0 ? slides[prevIndex] : null;
-    const nextSlide = slides[nextIndex];
-    const prevLines = prevSlide ? getMetodologiaSlideLines(prevSlide) : [];
-    const nextLines = getMetodologiaSlideLines(nextSlide);
-
     if (prevIndex === nextIndex) return;
 
+    const nextSlide = slides[nextIndex];
+    const nextLines = getMetodologiaSlideLines(nextSlide);
+    const scrollDirection =
+      prevIndex >= 0 && nextIndex !== prevIndex
+        ? nextIndex > prevIndex
+          ? 1
+          : -1
+        : 1;
+    const skipCount = prevIndex >= 0 ? Math.abs(nextIndex - prevIndex) : 0;
+    const wasAnimating = Boolean(copyTween?.isActive?.());
+
     copyTween?.kill();
-    slides.forEach((slide) => gsap.killTweensOf(getMetodologiaSlideLines(slide)));
+    copyTween = null;
+
+    slides.forEach((slide, i) => {
+      if (i === nextIndex) return;
+      hideMetodologiaSlideInstantly(slide);
+    });
 
     nextSlide.classList.add('is-active');
     nextSlide.classList.remove('is-leaving');
     nextSlide.setAttribute('aria-hidden', 'false');
     wave?.setMetodologiaWaveLinesHidden(nextLines);
 
-    if (prevSlide && prevIndex !== nextIndex) {
-      prevSlide.classList.remove('is-active');
-      prevSlide.classList.add('is-leaving');
-      prevSlide.setAttribute('aria-hidden', 'true');
+    const useShowOnly = skipCount > 1 || wasAnimating || prevIndex < 0;
 
+    if (useShowOnly) {
       copyTween = gsap.timeline({
         defaults: { overwrite: 'auto' },
         onComplete: () => finalizeCopySlides(nextIndex),
+        onInterrupt: () => finalizeCopySlides(nextIndex),
       });
-
-      copyTween.add(wave.animateMetodologiaWaveLines(prevLines, 'hide', scrollDirection));
-      copyTween.add(
-        wave.animateMetodologiaWaveLines(nextLines, 'show', scrollDirection),
-        '-=0.16'
-      );
+      copyTween.add(wave.animateMetodologiaWaveLines(nextLines, 'show', scrollDirection));
       return;
     }
+
+    const prevSlide = slides[prevIndex];
+    const prevLines = getMetodologiaSlideLines(prevSlide);
+
+    prevSlide.classList.remove('is-active');
+    prevSlide.classList.add('is-leaving');
+    prevSlide.setAttribute('aria-hidden', 'true');
 
     copyTween = gsap.timeline({
       defaults: { overwrite: 'auto' },
       onComplete: () => finalizeCopySlides(nextIndex),
+      onInterrupt: () => finalizeCopySlides(nextIndex),
     });
-    copyTween.add(wave.animateMetodologiaWaveLines(nextLines, 'show', scrollDirection));
+
+    copyTween.add(wave.animateMetodologiaWaveLines(prevLines, 'hide', scrollDirection));
+    copyTween.add(
+      wave.animateMetodologiaWaveLines(nextLines, 'show', scrollDirection),
+      '-=0.08'
+    );
+    copyTween.eventCallback('onKill', () => hideMetodologiaSlideInstantly(prevSlide));
   }
 
   const showCard = (index) => {
