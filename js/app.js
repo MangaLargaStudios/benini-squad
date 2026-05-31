@@ -1423,19 +1423,22 @@ function initScrollSync() {
 }
 
 function initMarqueeStrip() {
-  const strip = document.querySelector('.marquee-strip--divider');
-  const track = strip?.querySelector('.marquee-track');
-  if (!strip || !track) return;
+  const strips = [...document.querySelectorAll('.marquee-strip--divider')];
+  if (!strips.length) return;
 
-  const compute = () => {
-    const total = track.scrollWidth;
-    if (!total || !Number.isFinite(total)) return;
-    const shift = Math.floor(total / 2);
-    strip.style.setProperty('--marquee-shift', `${shift}px`);
+  const computeAll = () => {
+    strips.forEach((strip) => {
+      const track = strip.querySelector('.marquee-track');
+      if (!track) return;
+
+      const total = track.scrollWidth;
+      if (!total || !Number.isFinite(total)) return;
+      strip.style.setProperty('--marquee-shift', `${Math.floor(total / 2)}px`);
+    });
   };
 
-  compute();
-  window.addEventListener('resize', () => requestAnimationFrame(compute));
+  computeAll();
+  window.addEventListener('resize', () => requestAnimationFrame(computeAll));
 }
 
 /* ─────────────────────────────────────────────

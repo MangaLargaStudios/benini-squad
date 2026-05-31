@@ -1,6 +1,6 @@
 'use strict';
 
-const HERO_HOLD_PHASE_SPLIT = { dumbbell: 0.44, blur: 0.26, text: 0.3 };
+const HERO_HOLD_PHASE_SPLIT = { dumbbell: 0.52, blur: 0.48, text: 0 };
 const HERO_BLUEPRINT_DEFAULTS = {
   strength: 1,
   lineA: 0.2,
@@ -24,11 +24,11 @@ function mapBlueprintVars({ strength, lineA, lineB, layerB }) {
 }
 
 const HERO_ASIDE_LINE_HIDDEN = { yPercent: 110, opacity: 0 };
-const HERO_ASIDE_LINE_DELAY = 0.08;
+const HERO_ASIDE_TEXT_REVEAL_DELAY_MS = 100;
+const HERO_ASIDE_LINE_STAGGER = 0.05;
 const HERO_PHASE_SCROLL_IDS = [
   'hero-phase-blueprint',
   'hero-phase-blur',
-  'hero-phase-text',
   'hero-manifesto-overlap',
   'manifesto-overlap-text',
 ];
@@ -46,15 +46,94 @@ function getHeroBeniniAsideLines() {
 
 function resetHeroBeniniTextAsides() {
   const band = document.querySelector('.hero-benini-text-band');
+  const beniniNameplate = document.getElementById('hero-visual-benini-nameplate');
+  const asides = getHeroBeniniTextAsides();
+  const lines = heroBeniniTextState?.lines?.length
+    ? heroBeniniTextState.lines
+    : [...getHeroBeniniAsideLines()];
+
+  gsap.killTweensOf([...asides, ...lines, beniniNameplate].filter(Boolean));
+
   if (band) {
     band.setAttribute('aria-hidden', 'true');
   }
 
-  getHeroBeniniTextAsides().forEach((aside) => {
+  asides.forEach((aside) => {
     aside.dataset.asideScrollReady = 'false';
     gsap.set(aside, { opacity: 0, visibility: 'hidden' });
     gsap.set(aside.querySelectorAll('.aside-line'), HERO_ASIDE_LINE_HIDDEN);
   });
+
+  if (beniniNameplate) {
+    gsap.set(beniniNameplate, { opacity: 0, visibility: 'hidden' });
+  }
+
+  if (heroBeniniTextState) {
+    clearTimeout(heroBeniniTextState.timer);
+    heroBeniniTextState.played = false;
+    heroBeniniTextState.pending = false;
+  }
+}
+
+let heroBeniniTextState = null;
+
+function setHeroBeniniTextState(nextState) {
+  if (heroBeniniTextState?.timer) {
+    clearTimeout(heroBeniniTextState.timer);
+  }
+  heroBeniniTextState = nextState;
+}
+
+function playHeroBeniniTextReveal() {
+  const state = heroBeniniTextState;
+  if (!state || state.played || state.pending) return;
+
+  state.pending = true;
+  state.timer = setTimeout(() => {
+    state.pending = false;
+    if (state.played) return;
+    state.played = true;
+
+    const { asides, lines, band, beniniNameplate } = state;
+    gsap.killTweensOf([...asides, ...lines, beniniNameplate].filter(Boolean));
+
+    asides.forEach((aside) => {
+      gsap.set(aside, { visibility: 'visible', opacity: 1 });
+    });
+    band?.setAttribute('aria-hidden', 'false');
+
+    if (beniniNameplate) {
+      gsap.set(beniniNameplate, { visibility: 'visible' });
+      gsap.to(beniniNameplate, {
+        opacity: 1,
+        duration: 0.32,
+        ease: 'power2.out',
+        overwrite: 'auto',
+      });
+    }
+
+    gsap.to(lines, {
+      yPercent: 0,
+      opacity: 1,
+      duration: 0.34,
+      ease: 'power2.out',
+      stagger: { each: HERO_ASIDE_LINE_STAGGER, from: 'start' },
+      overwrite: 'auto',
+    });
+  }, HERO_ASIDE_TEXT_REVEAL_DELAY_MS);
+}
+
+function updateHeroDumbbell(beniniEased) {
+  if (typeof beniniEased !== 'number' || !heroBeniniTextState) return;
+
+  if (beniniEased >= 0.06) {
+    playHeroBeniniTextReveal();
+    return;
+  }
+
+  if (beniniEased < 0.02 && (heroBeniniTextState.played || heroBeniniTextState.pending)) {
+    resetHeroBeniniTextAsides();
+  }
 }
 
 function dumbbellScrollTriggerConfig(overrides = {}) {
@@ -80,15 +159,7 @@ function killHeroPhaseScrolls() {
 
   HERO_PHASE_SCROLL_IDS.forEach((id) => ScrollTrigger.getById(id)?.kill());
 
-  const aside = document.getElementById('benini-text-aside-left');
-  if (aside) {
-    resetHeroBeniniTextAsides();
-  }
-
-  const beniniNameplate = document.getElementById('hero-visual-benini-nameplate');
-  if (beniniNameplate) {
-    gsap.set(beniniNameplate, { opacity: 0, visibility: 'hidden' });
-  }
+  resetHeroBeniniTextAsides();
 
   const blurLayers = getHeroBlurLayers();
   if (blurLayers.length) {
@@ -317,6 +388,7 @@ function initHeroVideoPhaseScroll() {
       if (beniniNameplate) {
         gsap.set(beniniNameplate, { opacity: 1, visibility: 'visible' });
       }
+      setHeroBeniniTextState(null);
     } else {
       if (band) band.setAttribute('aria-hidden', 'true');
       asides.forEach((aside) => {
@@ -328,42 +400,18 @@ function initHeroVideoPhaseScroll() {
         gsap.set(beniniNameplate, { opacity: 0, visibility: 'hidden' });
       }
 
-      const tl = gsap.timeline({
-        scrollTrigger: dumbbellScrollTriggerConfig({
-          id: 'hero-phase-text',
-          trigger,
-          ...phaseScrollRange(phases.text),
-          scrub,
-        }),
+      setHeroBeniniTextState({
+        asides,
+        lines: [...lines],
+        band,
+        beniniNameplate,
+        played: false,
+        pending: false,
+        timer: null,
       });
-
-      asides.forEach((aside) => {
-        tl.set(aside, { visibility: 'visible' }, 0);
-        tl.to(aside, { opacity: 1, ease: 'none', duration: 0.05 }, 0);
-      });
-      tl.call(() => band?.setAttribute('aria-hidden', 'false'), null, 0);
-
-      if (beniniNameplate) {
-        tl.set(beniniNameplate, { visibility: 'visible' }, 0);
-        tl.to(
-          beniniNameplate,
-          { opacity: 1, ease: 'none', duration: 0.48 },
-          HERO_ASIDE_LINE_DELAY
-        );
-      }
-      tl.fromTo(
-        lines,
-        HERO_ASIDE_LINE_HIDDEN,
-        {
-          yPercent: 0,
-          opacity: 1,
-          ease: 'none',
-          duration: 0.48,
-          stagger: { each: HERO_ASIDE_LINE_DELAY, from: 'start' },
-        },
-        HERO_ASIDE_LINE_DELAY
-      );
     }
+  } else {
+    setHeroBeniniTextState(null);
   }
 
   if (!reducedMotion) {
@@ -516,4 +564,4 @@ window.initHeroVideoPhaseScroll = initHeroVideoPhaseScroll;
 window.initHeroBlueprintGridParallax = initHeroBlueprintGridParallax;
 window.setHeroOverlapCoverMode = setHeroOverlapCoverMode;
 window.killHeroPhaseScrolls = killHeroPhaseScrolls;
-window.updateHeroDumbbell = () => {};
+window.updateHeroDumbbell = updateHeroDumbbell;

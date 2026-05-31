@@ -1,8 +1,8 @@
 'use strict';
 
 const BENINI_REVEAL_LEAD_SEC = 2;
-const BENINI_HOLD_SCROLL_VH = { mobile: 0.85, desktop: 1.15 };
-const HERO_ASIDE_TEXT_HOLD_VH = { mobile: 0.55, desktop: 0.72 };
+const BENINI_HOLD_SCROLL_VH = { mobile: 0.55, desktop: 0.62 };
+const HERO_ASIDE_TEXT_HOLD_VH = { mobile: 0.18, desktop: 0.22 };
 const HERO_OVERLAP_SCROLL_VH = { mobile: 0, desktop: 0 };
 const BENINI_BLUR_MAX = { mobile: 5, desktop: 9 };
 
@@ -61,10 +61,10 @@ function getVideoScrollDistance(duration) {
   const overlapScroll = getHeroOverlapScroll();
 
   if (isMobileViewport()) {
-    return Math.max(vh * 1.75, Math.round(vh * (1 + duration * 0.32))) + animationHold + overlapScroll;
+    return Math.max(vh * 1.35, Math.round(vh * (0.82 + duration * 0.24))) + animationHold + overlapScroll;
   }
 
-  return Math.max(vh * 2, Math.round(vh * (1.25 + duration * 0.4))) + animationHold + overlapScroll;
+  return Math.max(vh * 1.55, Math.round(vh * (0.95 + duration * 0.28))) + animationHold + overlapScroll;
 }
 
 function getMainScrollRatio(scrollDistance, animationHold, overlapScroll) {
