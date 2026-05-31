@@ -746,6 +746,18 @@ html.nav-menu-open {
   background-repeat: no-repeat;
 }
 
+/* Ultra-wide (ex.: 2560×1080): preenche a faixa esquerda não coberta pelo bg */
+@media (min-width: 2560px) and (max-height: 1080px),
+       (min-aspect-ratio: 21/9) and (min-width: 2000px) {
+  .hero-bg {
+    background-color: #000000;
+  }
+
+  .hero-main {
+    background-color: #000000;
+  }
+}
+
 .hero-bg-overlay {
   position: absolute;
   inset: 0;
